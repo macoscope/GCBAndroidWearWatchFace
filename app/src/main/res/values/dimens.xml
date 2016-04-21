@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <dimen name="analog_hand_stroke">3dp</dimen>
+    <dimen name="hour_text_size">32dp</dimen>
+    <dimen name="face_padding">30dp</dimen>
+    <dimen name="dash_gap">6dp</dimen>
+    <dimen name="outside_oval_stroke">8dp</dimen>
+    <dimen name="inner_oval_stroke">6dp</dimen>
+</resources>
