@@ -5,5 +5,5 @@
     <dimen name="face_padding">30dp</dimen>
     <dimen name="dash_gap">6dp</dimen>
     <dimen name="outside_oval_stroke">8dp</dimen>
-    <dimen name="inner_oval_stroke">6dp</dimen>
+    <dimen name="inner_oval_stroke">2dp</dimen>
 </resources>

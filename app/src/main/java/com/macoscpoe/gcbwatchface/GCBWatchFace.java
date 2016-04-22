@@ -113,9 +113,11 @@ public class GCBWatchFace extends CanvasWatchFaceService {
         private TextPaint hourTextPaint;
 
         private RectF oval;
+        private RectF innerOval;
         private RectF arcRect;
 
         private float strokeSize;
+        private float innerStrokeSize;
         private int backgroundColor;
         private float padding;
 
@@ -126,8 +128,6 @@ public class GCBWatchFace extends CanvasWatchFaceService {
                 time.setTime(new Date());
             }
         };
-
-
         @Override
         public void onCreate(SurfaceHolder holder) {
             super.onCreate(holder);
@@ -138,6 +138,7 @@ public class GCBWatchFace extends CanvasWatchFaceService {
             backgroundColor = ContextCompat.getColor(context, R.color.background);
             oval = new RectF();
             arcRect = new RectF();
+            innerOval = new RectF();
             padding = getDimensionSize(R.dimen.face_padding);
         }
 
@@ -181,8 +182,10 @@ public class GCBWatchFace extends CanvasWatchFaceService {
 
             innerOvalPaint = new Paint();
             innerOvalPaint.setColor(COLOR_WHITE);
-            innerOvalPaint.setStrokeWidth(getDimensionSize(R.dimen.inner_oval_stroke));
+            innerStrokeSize = getDimensionSize(R.dimen.inner_oval_stroke);
+            innerOvalPaint.setStrokeWidth(innerStrokeSize);
             innerOvalPaint.setAntiAlias(true);
+            innerOvalPaint.setStyle(Paint.Style.STROKE);
 
             bitmapPaint = new Paint();
             bitmapPaint.setAntiAlias(true);
@@ -231,7 +234,7 @@ public class GCBWatchFace extends CanvasWatchFaceService {
             updateTimer();
         }
 
-        private void setAntiAliasForPaints(boolean antiAliasOn){
+        private void setAntiAliasForPaints(boolean antiAliasOn) {
             bitmapPaint.setAntiAlias(antiAliasOn);
             handPaint.setAntiAlias(antiAliasOn);
             debugPaint.setAntiAlias(antiAliasOn);
@@ -282,6 +285,8 @@ public class GCBWatchFace extends CanvasWatchFaceService {
             } else {
                 drawWatchFace(canvas, bounds, strokeSize, minutes);
             }
+
+            drawMeetingIndicator(canvas, strokeSize);
             canvas.drawText(getHourToDisplay(time), centerX, centerY, hourTextPaint);
         }
 
@@ -291,6 +296,26 @@ public class GCBWatchFace extends CanvasWatchFaceService {
             float secX = (float) Math.sin(secRot) * secLength;
             float secY = (float) -Math.cos(secRot) * secLength;
             canvas.drawLine(centerX, centerY, centerX + secX, centerY + secY, handPaint);
+        }
+
+        private void drawMeetingIndicator(Canvas canvas, float stroke) {
+            innerOval.set(oval.left + stroke, oval.top + stroke, oval.right - stroke,
+                    oval.bottom - stroke);
+
+            float piece = (float) (Math.PI * innerOval.width() / 12);
+            float gap = PIECES_GAP;
+            if (innerOvalPaint.getPathEffect() == null) {
+                DashPathEffect dashPathEffect = new DashPathEffect(new float[]{piece - gap, gap}, 0);
+                innerOvalPaint.setPathEffect(dashPathEffect);
+            }
+
+            float ovalRotation = (gap / 2 * 30) / piece;
+
+            canvas.save();
+            canvas.rotate(ovalRotation, innerOval.centerX(), innerOval.centerY());
+            canvas.translate(padding - stroke + innerStrokeSize /2, padding - stroke - innerStrokeSize/2);
+            canvas.drawOval(innerOval, innerOvalPaint);
+            canvas.restore();
         }
 
         private void drawWatchFace(Canvas sourceCanvas, Rect bounds, float stroke, int minutes) {
@@ -310,8 +335,10 @@ public class GCBWatchFace extends CanvasWatchFaceService {
             oval.set(stroke, stroke, width - stroke, height - stroke);
             float piece = (float) (Math.PI * oval.width() / 12);
             float gap = PIECES_GAP;
-            DashPathEffect dashPathEffect = new DashPathEffect(new float[]{piece - gap, gap}, 0);
-            gradientPaint.setPathEffect(dashPathEffect);
+            if (gradientPaint.getPathEffect() == null) {
+                DashPathEffect dashPathEffect = new DashPathEffect(new float[]{piece - gap, gap}, 0);
+                gradientPaint.setPathEffect(dashPathEffect);
+            }
             //count rotation to have gaps in dashed stroke on hours place
             float ovalRotation = (gap / 2 * 30) / piece - 90;
 
