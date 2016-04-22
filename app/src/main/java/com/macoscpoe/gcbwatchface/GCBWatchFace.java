@@ -80,7 +80,6 @@ public class GCBWatchFace extends CanvasWatchFaceService {
         private static final int COLOR_NEUTRAL = 0xFF1a1a1a;
         private static final int COLOR_HOUR = 0xFFFFFFFF;
 
-        private static final int PADDING = 30;
         private static final int PIECES_GAP = 8;
 
         private final int[] OVAL_GRADIENT = new int[]{COLOR_GREEN_BLUE, COLOR_SOFT_BLUE, COLOR_BLUSH,
@@ -118,6 +117,7 @@ public class GCBWatchFace extends CanvasWatchFaceService {
 
         private float strokeSize;
         private int backgroundColor;
+        private float padding;
 
         private final BroadcastReceiver mTimeZoneReceiver = new BroadcastReceiver() {
             @Override
@@ -126,6 +126,7 @@ public class GCBWatchFace extends CanvasWatchFaceService {
                 time.setTime(new Date());
             }
         };
+
 
         @Override
         public void onCreate(SurfaceHolder holder) {
@@ -137,6 +138,7 @@ public class GCBWatchFace extends CanvasWatchFaceService {
             backgroundColor = ContextCompat.getColor(context, R.color.background);
             oval = new RectF();
             arcRect = new RectF();
+            padding = getDimensionSize(R.dimen.face_padding);
         }
 
         private void setUpWatchFaceStyle() {
@@ -175,10 +177,12 @@ public class GCBWatchFace extends CanvasWatchFaceService {
             arcPaint = new Paint();
             arcPaint.setColor(COLOR_NEUTRAL);
             arcPaint.setXfermode(new PorterDuffXfermode(PorterDuff.Mode.SRC_ATOP));
+            arcPaint.setAntiAlias(true);
 
             innerOvalPaint = new Paint();
             innerOvalPaint.setColor(COLOR_WHITE);
             innerOvalPaint.setStrokeWidth(getDimensionSize(R.dimen.inner_oval_stroke));
+            innerOvalPaint.setAntiAlias(true);
 
             bitmapPaint = new Paint();
             bitmapPaint.setAntiAlias(true);
@@ -217,7 +221,7 @@ public class GCBWatchFace extends CanvasWatchFaceService {
             if (mAmbient != inAmbientMode) {
                 mAmbient = inAmbientMode;
                 if (mLowBitAmbient) {
-                    handPaint.setAntiAlias(!inAmbientMode);
+                    setAntiAliasForPaints(!inAmbientMode);
                 }
                 invalidate();
             }
@@ -225,6 +229,15 @@ public class GCBWatchFace extends CanvasWatchFaceService {
             // Whether the timer should be running depends on whether we're visible (as well as
             // whether we're in ambient mode), so we may need to start or stop the timer.
             updateTimer();
+        }
+
+        private void setAntiAliasForPaints(boolean antiAliasOn){
+            bitmapPaint.setAntiAlias(antiAliasOn);
+            handPaint.setAntiAlias(antiAliasOn);
+            debugPaint.setAntiAlias(antiAliasOn);
+            arcPaint.setAntiAlias(antiAliasOn);
+            innerOvalPaint.setAntiAlias(antiAliasOn);
+            gradientPaint.setAntiAlias(antiAliasOn);
         }
 
         /**
@@ -262,8 +275,8 @@ public class GCBWatchFace extends CanvasWatchFaceService {
             int hour = time.get(Calendar.HOUR_OF_DAY);
 
             if (drawInDebugMode) {
-                canvas.drawLine(0, centerY, bounds.right, centerY, debugPaint);
-                canvas.drawLine(centerX, 0, centerX, bounds.bottom, debugPaint);
+//                canvas.drawLine(0, centerY, bounds.right, centerY, debugPaint);
+//                canvas.drawLine(centerX, 0, centerX, bounds.bottom, debugPaint);
                 drawSecondsClockHand(canvas, centerX, centerY, seconds);
                 drawWatchFace(canvas, bounds, strokeSize, seconds);
             } else {
@@ -281,7 +294,6 @@ public class GCBWatchFace extends CanvasWatchFaceService {
         }
 
         private void drawWatchFace(Canvas sourceCanvas, Rect bounds, float stroke, int minutes) {
-            float padding = PADDING;
             int width = (int) (bounds.width() - padding * 2 + stroke * 2);
             int height = (int) (bounds.height() - padding * 2 + stroke * 2);
             float centerX = width / 2;
@@ -335,7 +347,6 @@ public class GCBWatchFace extends CanvasWatchFaceService {
         @Override
         public void onVisibilityChanged(boolean visible) {
             super.onVisibilityChanged(visible);
-
             if (visible) {
                 registerReceiver();
                 // Update time zone in case it changed while we weren't visible.
