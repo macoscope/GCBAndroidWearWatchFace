@@ -203,9 +203,11 @@ public class GCBWatchFace extends CanvasWatchFaceService {
             debugPaint.setColor(Color.RED);
 
             innerArcPaint = new Paint();
-            innerArcPaint.setXfermode(new PorterDuffXfermode(PorterDuff.Mode.DST_ATOP));
+            innerArcPaint.setXfermode(new PorterDuffXfermode(PorterDuff.Mode.SRC_IN));
             innerArcPaint.setAntiAlias(true);
+            innerArcPaint.setColor(Color.TRANSPARENT);
         }
+
 
         private float getDimensionSize(int id) {
             return getResources().getDimension(id);
@@ -299,7 +301,7 @@ public class GCBWatchFace extends CanvasWatchFaceService {
                 drawWatchFace(faceBitmap, bounds, strokeSize, minutes);
             }
 
-            drawMeetingIndicator(faceBitmap, 12);
+            drawMeetingIndicator(faceBitmap, seconds);
 
             canvas.drawBitmap(faceBitmap, padding - strokeSize, padding - strokeSize, bitmapPaint);
 
@@ -343,6 +345,21 @@ public class GCBWatchFace extends CanvasWatchFaceService {
             indicatorCanvas.rotate(ovalRotation, innerOval.centerX(), innerOval.centerY());
             indicatorCanvas.drawOval(innerOval, innerOvalPaint);
             indicatorCanvas.restore();
+
+
+            arcRect = new RectF(innerOval.left - innerStrokeSize, innerOval.top - innerStrokeSize,
+                    innerOval.right + innerStrokeSize, innerOval.bottom + innerStrokeSize);
+
+            float startAngle;
+            float angle = 330;
+
+            if (minutes == 0) {
+                startAngle = -60;
+            } else {
+                startAngle = (minutes * 6 / 30) * 30 - 60;
+            }
+
+            indicatorCanvas.drawArc(arcRect, startAngle, angle, true, innerArcPaint);
 
         }
 
