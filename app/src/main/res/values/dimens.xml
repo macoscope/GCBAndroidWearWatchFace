@@ -3,8 +3,8 @@
     <dimen name="analog_hand_stroke">3dp</dimen>
     <dimen name="hour_text_size">32dp</dimen>
     <dimen name="face_padding">30dp</dimen>
-    <dimen name="dash_gap">6dp</dimen>
-    <dimen name="outside_oval_stroke">6dp</dimen>
+    <dimen name="outside_oval_stroke">8dp</dimen>
     <dimen name="inner_oval_stroke">2dp</dimen>
     <dimen name="ovals_gap">4dp</dimen>
+    <dimen name="event_name_font">12dp</dimen>
 </resources>
