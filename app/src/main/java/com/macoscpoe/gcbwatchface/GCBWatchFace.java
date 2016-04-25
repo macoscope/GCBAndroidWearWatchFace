@@ -380,6 +380,8 @@ public class GCBWatchFace extends CanvasWatchFaceService {
             int angle;
             if (minutes > 30) {
                 angle = (minutes * 6 / 30) * 30;
+            } else if (minutes == 0) {
+                angle = -330;
             } else {
                 angle = -((60 - minutes) * 6 / 30) * 30;
             }
