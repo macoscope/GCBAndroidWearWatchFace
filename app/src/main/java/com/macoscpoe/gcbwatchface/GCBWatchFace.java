@@ -109,7 +109,7 @@ public class GCBWatchFace extends CanvasWatchFaceService {
          * disable anti-aliasing in ambient mode.
          */
         boolean lowBitAmbient;
-        boolean drawInDebugMode = false;
+        boolean drawInEventMode = false;
 
         private GregorianCalendar time;
 
@@ -148,10 +148,12 @@ public class GCBWatchFace extends CanvasWatchFaceService {
         private int startsInHeight;
         private int startInMinutesHeight;
         private int startInMinutesPadding;
+        private int hourHeight;
 
         private String startsIn;
 
         private TextView eventNameTextView;
+        private Typeface typefaceLight;
 
         private final BroadcastReceiver timeZoneReceiver = new BroadcastReceiver() {
             @Override
@@ -193,6 +195,11 @@ public class GCBWatchFace extends CanvasWatchFaceService {
 
             ovalGradient = new int[]{colorGreenBlue, colorSoftBlue, colorBlush,
                     colorLipstick, colorGreenBlue};
+
+            typefaceLight = Typeface.create(MINUTES_FONT_FAMILY, Typeface.NORMAL);
+            if (typefaceLight == null) {
+                typefaceLight = Typeface.DEFAULT;
+            }
         }
 
         private void initEventNameTextView(Context context) {
@@ -258,8 +265,12 @@ public class GCBWatchFace extends CanvasWatchFaceService {
         private void initHourTextPaint() {
             hourTextPaint = new TextPaint();
             hourTextPaint.setTextSize(getDimensionToPixel(R.dimen.hour_text_size));
-            hourTextPaint.setColor(colorWhite);
             hourTextPaint.setTextAlign(Paint.Align.CENTER);
+            hourTextPaint.setTypeface(typefaceLight);
+            Rect textBounds = new Rect();
+            String digits = String.format("%d", ALL_DIGITS);
+            hourTextPaint.getTextBounds(digits, 0, digits.length(), textBounds);
+            hourHeight = textBounds.height();
         }
 
         private void initGradientPaint() {
@@ -311,11 +322,7 @@ public class GCBWatchFace extends CanvasWatchFaceService {
             minutesTextPaint.setStyle(Paint.Style.FILL);
             minutesTextPaint.setTextSize(getDimensionToPixel(R.dimen.minutes_to_event_font));
             minutesTextPaint.setTextAlign(Paint.Align.CENTER);
-            Typeface typeface = Typeface.create(MINUTES_FONT_FAMILY, Typeface.NORMAL);
-            if (typeface == null) {
-                typeface = Typeface.DEFAULT;
-            }
-            minutesTextPaint.setTypeface(typeface);
+            minutesTextPaint.setTypeface(typefaceLight);
             Rect textBounds = new Rect();
             String minutesString = getResources().getQuantityString(R.plurals.minutes, ALL_DIGITS, ALL_DIGITS);
             minutesTextPaint.getTextBounds(minutesString, 0, minutesString.length(), textBounds);
@@ -383,7 +390,7 @@ public class GCBWatchFace extends CanvasWatchFaceService {
                     break;
                 case TAP_TYPE_TAP:
                     // The user has completed the tap gesture.
-                    drawInDebugMode = !drawInDebugMode;
+                    drawInEventMode = !drawInEventMode;
                     break;
             }
             invalidate();
@@ -403,23 +410,25 @@ public class GCBWatchFace extends CanvasWatchFaceService {
 
             initWatchFaceBitmap(bounds, strokeSize);
 
-            if (drawInDebugMode) {
-                drawSecondsClockHand(canvas, centerX, centerY, seconds);
-                drawWatchFace(faceBitmap, bounds, strokeSize, seconds);
-                drawMeetingIndicator(faceBitmap, seconds);
+            if (drawInEventMode) {
+                drawEventName(canvas, innerOval, EVENT.getName(), centerX, centerY);
+                canvas.drawText(startsIn, centerX, centerY + startsInHeight, startsInTextPaint);
+                canvas.drawText(EVENT.getMinutesToEvent(getResources(), time.getTimeInMillis()), centerX, centerY +
+                                startsInHeight + startInMinutesPadding + startInMinutesHeight,
+                        minutesTextPaint);
             } else {
-                drawWatchFace(faceBitmap, bounds, strokeSize, minutes);
+                drawSecondsClockHand(canvas, centerX, centerY, seconds);
+                hourTextPaint.setColor(minutes < 30 ? colorGreenBlue : colorLipstick);
+                getHourToDisplay(time);
+                canvas.drawText(getHourToDisplay(time), centerX, centerY + hourHeight / 2, hourTextPaint);
             }
+
+            drawWatchFace(faceBitmap, bounds, strokeSize, minutes);
 
             drawMeetingIndicator(faceBitmap, EVENT.getHourMinutes());
 
             canvas.drawBitmap(faceBitmap, padding - strokeSize, padding - strokeSize, bitmapPaint);
 
-            drawEventName(canvas, innerOval, EVENT.getName(), centerX, centerY);
-            canvas.drawText(startsIn, centerX, centerY + startsInHeight, startsInTextPaint);
-            canvas.drawText(EVENT.getMinutesToEvent(getResources(), time.getTimeInMillis()), centerX, centerY +
-                            startsInHeight + startInMinutesPadding + startInMinutesHeight,
-                    minutesTextPaint);
 
         }
 
