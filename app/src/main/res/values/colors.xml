@@ -2,4 +2,11 @@
 <resources>
     <color name="analog_hands">#80cccccc</color>
     <color name="background">#000000</color>
+    <color name="soft_blue">#6195e4</color>
+    <color name="green_blue">#22daa8</color>
+    <color name="blush">#ea997d</color>
+    <color name="lipstick">#e3325c</color>
+    <color name="white">#FFFFFF</color>
+    <color name="neutral">#1a1a1a</color>
+    <color name="grey_font">#808080</color>
 </resources>

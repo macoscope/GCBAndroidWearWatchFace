@@ -78,21 +78,17 @@ public class GCBWatchFace extends CanvasWatchFaceService {
     }
 
     private class GCBWatchFaceEngine extends CanvasWatchFaceService.Engine {
-        //TODO move to resources
-        private static final int COLOR_SOFT_BLUE = 0xFF6195e4;
-        private static final int COLOR_GREEN_BLUE = 0xFF22daa8;
-        private static final int COLOR_BLUSH = 0xFFea997d;
-        private static final int COLOR_LIPSTICK = 0xFFe3325c;
-        private static final int COLOR_WHITE = 0xFFFFFFFF;
-        private static final int COLOR_NEUTRAL = 0xFF1a1a1a;
-        private static final int COLOR_GRAY = 0xFF808080;
-        private static final int COLOR_HOUR = 0xFFFFFFFF;
-        private static final String STARTS_IN = "starts in";
+        private int colorSoftBlue;
+        private int colorGreenBlue;
+        private int colorBlush;
+        private int colorLipstick;
+        private int colorWhite;
+        private int colorNeutral;
+        private int colorGray;
 
         private static final int PIECES_GAP = 8;
 
-        private final int[] OVAL_GRADIENT = new int[]{COLOR_GREEN_BLUE, COLOR_SOFT_BLUE, COLOR_BLUSH,
-                COLOR_LIPSTICK, COLOR_GREEN_BLUE};
+        private int[] ovalGradient;
         /**
          * Positions tweaked for best gradient position on canvas rotation
          */
@@ -108,7 +104,7 @@ public class GCBWatchFace extends CanvasWatchFaceService {
          * Whether the display supports fewer bits for each color in ambient mode. When true, we
          * disable anti-aliasing in ambient mode. - TODO not yet handled
          */
-        boolean mLowBitAmbient;
+        boolean lowBitAmbient;
         boolean drawInDebugMode = false;
 
         private GregorianCalendar time;
@@ -132,10 +128,13 @@ public class GCBWatchFace extends CanvasWatchFaceService {
 
         private float strokeSize;
         private float innerStrokeSize;
-        private int backgroundColor;
         private float padding;
         private float ovalsGap;
+
+        private int backgroundColor;
         private int startsInHeight;
+
+        private String startsIn;
 
         private TextView eventNameTextView;
 
@@ -160,20 +159,33 @@ public class GCBWatchFace extends CanvasWatchFaceService {
         }
 
         private void initResources(Context context) {
-            backgroundColor = ContextCompat.getColor(context, R.color.background);
             scale = getResources().getDisplayMetrics().density;
 
             strokeSize = getDimensionToPixel(R.dimen.outside_oval_stroke, scale);
             innerStrokeSize = getDimensionToPixel(R.dimen.inner_oval_stroke, scale);
             padding = getDimensionToPixel(R.dimen.face_padding, scale);
             ovalsGap = getDimensionToPixel(R.dimen.ovals_gap, scale);
+
+            startsIn = getString(R.string.starts_in);
+
+            backgroundColor = ContextCompat.getColor(context, R.color.background);
+            colorSoftBlue = ContextCompat.getColor(context, R.color.soft_blue);
+            colorGreenBlue = ContextCompat.getColor(context, R.color.green_blue);
+            colorBlush = ContextCompat.getColor(context, R.color.blush);
+            colorLipstick = ContextCompat.getColor(context, R.color.lipstick);
+            colorWhite = ContextCompat.getColor(context, R.color.white);
+            colorNeutral = ContextCompat.getColor(context, R.color.neutral);
+            colorGray = ContextCompat.getColor(context, R.color.grey_font);
+            
+            ovalGradient = new int[]{colorGreenBlue, colorSoftBlue, colorBlush,
+                    colorLipstick, colorGreenBlue};
         }
 
         private void initEventNameTextView(Context context) {
             eventNameTextView = new TextView(context);
             eventNameTextView.setTypeface(Typeface.DEFAULT);
             eventNameTextView.setTextSize(getResources().getDimension(R.dimen.event_name_font));
-            eventNameTextView.setTextColor(COLOR_WHITE);
+            eventNameTextView.setTextColor(colorWhite);
             LinearLayout.LayoutParams layoutParams = new LinearLayout.LayoutParams(
                     LinearLayout.LayoutParams.WRAP_CONTENT,
                     LinearLayout.LayoutParams.WRAP_CONTENT);
@@ -222,7 +234,7 @@ public class GCBWatchFace extends CanvasWatchFaceService {
 
         private void initHandPaint() {
             handPaint = new Paint();
-            handPaint.setColor(COLOR_NEUTRAL);
+            handPaint.setColor(colorNeutral);
             handPaint.setStrokeWidth(getDimensionToPixel(R.dimen.analog_hand_stroke, scale));
             handPaint.setStrokeCap(Paint.Cap.ROUND);
         }
@@ -230,7 +242,7 @@ public class GCBWatchFace extends CanvasWatchFaceService {
         private void initHourTextPaint() {
             hourTextPaint = new TextPaint();
             hourTextPaint.setTextSize(getDimensionToPixel(R.dimen.hour_text_size, scale));
-            hourTextPaint.setColor(COLOR_HOUR);
+            hourTextPaint.setColor(colorWhite);
             hourTextPaint.setTextAlign(Paint.Align.CENTER);
         }
 
@@ -243,13 +255,13 @@ public class GCBWatchFace extends CanvasWatchFaceService {
 
         private void initInactivePiecesPaint() {
             arcPaint = new Paint();
-            arcPaint.setColor(COLOR_NEUTRAL);
+            arcPaint.setColor(colorNeutral);
             arcPaint.setXfermode(new PorterDuffXfermode(PorterDuff.Mode.SRC_ATOP));
         }
 
         private void initInnerOvalPaint() {
             innerOvalPaint = new Paint();
-            innerOvalPaint.setColor(COLOR_WHITE);
+            innerOvalPaint.setColor(colorWhite);
             innerOvalPaint.setStrokeWidth(innerStrokeSize);
             innerOvalPaint.setStyle(Paint.Style.STROKE);
         }
@@ -268,12 +280,12 @@ public class GCBWatchFace extends CanvasWatchFaceService {
 
         private void initStartsInTextPaint() {
             startsInTextPaint = new TextPaint();
-            startsInTextPaint.setColor(COLOR_GRAY);
+            startsInTextPaint.setColor(colorGray);
             startsInTextPaint.setStyle(Paint.Style.FILL);
             startsInTextPaint.setTextSize(getDimensionToPixel(R.dimen.event_starts_in_font, scale));
             startsInTextPaint.setTextAlign(Paint.Align.CENTER);
             Rect textBounds = new Rect();
-            startsInTextPaint.getTextBounds(STARTS_IN, 0, STARTS_IN.length(), textBounds);
+            startsInTextPaint.getTextBounds(startsIn, 0, startsIn.length(), textBounds);
             startsInHeight = textBounds.height();
         }
 
@@ -286,7 +298,7 @@ public class GCBWatchFace extends CanvasWatchFaceService {
         @Override
         public void onPropertiesChanged(Bundle properties) {
             super.onPropertiesChanged(properties);
-            mLowBitAmbient = properties.getBoolean(PROPERTY_LOW_BIT_AMBIENT, false);
+            lowBitAmbient = properties.getBoolean(PROPERTY_LOW_BIT_AMBIENT, false);
         }
 
         @Override
@@ -300,7 +312,7 @@ public class GCBWatchFace extends CanvasWatchFaceService {
             super.onAmbientModeChanged(inAmbientMode);
             if (ambientMode != inAmbientMode) {
                 ambientMode = inAmbientMode;
-                if (mLowBitAmbient) {
+                if (lowBitAmbient) {
                     setAntiAliasForPaints(!inAmbientMode);
                 }
                 invalidate();
@@ -346,7 +358,6 @@ public class GCBWatchFace extends CanvasWatchFaceService {
         @Override
         public void onDraw(Canvas canvas, Rect bounds) {
             time.setTime(new Date());
-
             canvas.drawColor(backgroundColor);
 
             float centerX = bounds.centerX();
@@ -373,7 +384,9 @@ public class GCBWatchFace extends CanvasWatchFaceService {
 //            canvas.drawText(getHourToDisplay(time), centerX, centerY, hourTextPaint);
 
             drawEventName(canvas, innerOval, "Lorem ipsum dolor sit amet, consectetur adipiscing elit.", centerX, centerY);
-            canvas.drawText(STARTS_IN, centerX, centerY + startsInHeight, startsInTextPaint);
+            canvas.drawText(startsIn, centerX, centerY + startsInHeight, startsInTextPaint);
+
+
         }
 
         private void initWatchFaceBitmap(Rect bounds, float stroke) {
@@ -444,7 +457,7 @@ public class GCBWatchFace extends CanvasWatchFaceService {
             }
 
             if (gradientPaint.getShader() == null) {
-                gradientPaint.setShader(new SweepGradient(centerX, centerY, OVAL_GRADIENT, OVAL_GRADIENT_POSITION));
+                gradientPaint.setShader(new SweepGradient(centerX, centerY, ovalGradient, OVAL_GRADIENT_POSITION));
             }
 
             oval.set(stroke, stroke, width - stroke, height - stroke);
@@ -476,7 +489,7 @@ public class GCBWatchFace extends CanvasWatchFaceService {
 
         /**
          * Draw event name above inner oval diameter.
-         * @param canvas 
+         * @param canvas
          * @param innerOval
          * @param eventName
          * @param centerX - bounds center x
