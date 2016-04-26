@@ -58,15 +58,15 @@ public class GCBWatchFace extends CanvasWatchFaceService {
     }
 
     private static class EngineHandler extends Handler {
-        private final WeakReference<GCBWatchFaceEngine> mWeakReference;
+        private final WeakReference<GCBWatchFaceEngine> weakEngineReference;
 
         public EngineHandler(GCBWatchFaceEngine reference) {
-            mWeakReference = new WeakReference<>(reference);
+            weakEngineReference = new WeakReference<>(reference);
         }
 
         @Override
         public void handleMessage(Message msg) {
-            GCBWatchFaceEngine engine = mWeakReference.get();
+            GCBWatchFaceEngine engine = weakEngineReference.get();
             if (engine != null) {
                 switch (msg.what) {
                     case MSG_UPDATE_TIME:
@@ -87,6 +87,7 @@ public class GCBWatchFace extends CanvasWatchFaceService {
         private static final int COLOR_NEUTRAL = 0xFF1a1a1a;
         private static final int COLOR_GRAY = 0xFF808080;
         private static final int COLOR_HOUR = 0xFFFFFFFF;
+        private static final String STARTS_IN = "starts in";
 
         private static final int PIECES_GAP = 8;
 
@@ -99,9 +100,10 @@ public class GCBWatchFace extends CanvasWatchFaceService {
 
         private static final int MAX_TITLE_LINES = 2;
 
-        private final Handler mUpdateTimeHandler = new EngineHandler(this);
-        private boolean mRegisteredTimeZoneReceiver = false;
-        private boolean mAmbient;
+        private final Handler updateTimeHandler = new EngineHandler(this);
+        private boolean registeredTimeZoneReceiver = false;
+        private boolean ambientMode;
+        private float scale;
         /**
          * Whether the display supports fewer bits for each color in ambient mode. When true, we
          * disable anti-aliasing in ambient mode. - TODO not yet handled
@@ -122,6 +124,7 @@ public class GCBWatchFace extends CanvasWatchFaceService {
         private Paint gradientPaint;
         private Paint innerArcPaint;
         private TextPaint hourTextPaint;
+        private TextPaint startsInTextPaint;
 
         private RectF oval;
         private RectF innerOval;
@@ -132,11 +135,11 @@ public class GCBWatchFace extends CanvasWatchFaceService {
         private int backgroundColor;
         private float padding;
         private float ovalsGap;
-        private int eventNameFontSize;
+        private int startsInHeight;
 
-        private TextView textView;
+        private TextView eventNameTextView;
 
-        private final BroadcastReceiver mTimeZoneReceiver = new BroadcastReceiver() {
+        private final BroadcastReceiver timeZoneReceiver = new BroadcastReceiver() {
             @Override
             public void onReceive(Context context, Intent intent) {
                 time.setTimeZone(TimeZone.getTimeZone(intent.getStringExtra("time-zone")));
@@ -158,28 +161,27 @@ public class GCBWatchFace extends CanvasWatchFaceService {
 
         private void initResources(Context context) {
             backgroundColor = ContextCompat.getColor(context, R.color.background);
+            scale = getResources().getDisplayMetrics().density;
 
-            strokeSize = getDimensionPixelSize(R.dimen.outside_oval_stroke);
-            innerStrokeSize = getDimensionPixelSize(R.dimen.inner_oval_stroke);
-            padding = getDimensionPixelSize(R.dimen.face_padding);
-            ovalsGap = getDimensionPixelSize(R.dimen.ovals_gap);
-            innerStrokeSize = getDimensionPixelSize(R.dimen.inner_oval_stroke);
-            eventNameFontSize = getDimensionPixelSize(R.dimen.event_name_font);
+            strokeSize = getDimensionToPixel(R.dimen.outside_oval_stroke, scale);
+            innerStrokeSize = getDimensionToPixel(R.dimen.inner_oval_stroke, scale);
+            padding = getDimensionToPixel(R.dimen.face_padding, scale);
+            ovalsGap = getDimensionToPixel(R.dimen.ovals_gap, scale);
         }
 
-        private void initEventNameTextView(Context context){
-            textView = new TextView(context);
-            textView.setTypeface(Typeface.DEFAULT);
-            textView.setTextSize(eventNameFontSize);
-            textView.setTextColor(COLOR_WHITE);
+        private void initEventNameTextView(Context context) {
+            eventNameTextView = new TextView(context);
+            eventNameTextView.setTypeface(Typeface.DEFAULT);
+            eventNameTextView.setTextSize(getResources().getDimension(R.dimen.event_name_font));
+            eventNameTextView.setTextColor(COLOR_WHITE);
             LinearLayout.LayoutParams layoutParams = new LinearLayout.LayoutParams(
                     LinearLayout.LayoutParams.WRAP_CONTENT,
                     LinearLayout.LayoutParams.WRAP_CONTENT);
-            textView.setLayoutParams(layoutParams);
-            textView.setLines(MAX_TITLE_LINES);
-            textView.setEllipsize(TextUtils.TruncateAt.END);
-            textView.setTextAlignment(View.TEXT_ALIGNMENT_CENTER);
-            textView.setGravity(Gravity.BOTTOM);
+            eventNameTextView.setLayoutParams(layoutParams);
+            eventNameTextView.setLines(MAX_TITLE_LINES);
+            eventNameTextView.setEllipsize(TextUtils.TruncateAt.END);
+            eventNameTextView.setTextAlignment(View.TEXT_ALIGNMENT_CENTER);
+            eventNameTextView.setGravity(Gravity.BOTTOM);
         }
 
         private void initRectangles() {
@@ -209,23 +211,25 @@ public class GCBWatchFace extends CanvasWatchFaceService {
             initInnerOvalPaint();
             initBitmapPaint();
             initInactiveInnerPiecesPaint();
+            initStartsInTextPaint();
             setAntiAliasForPaints(true);
         }
 
-        private int getDimensionPixelSize(int dimenId) {
-            return getResources().getDimensionPixelSize(dimenId);
+        private int getDimensionToPixel(int id, float scale) {
+            // Convert the dps to pixels, based on density scale
+            return (int) (getResources().getDimension(id) * scale + 0.5f);
         }
 
         private void initHandPaint() {
             handPaint = new Paint();
             handPaint.setColor(COLOR_NEUTRAL);
-            handPaint.setStrokeWidth(getDimensionPixelSize(R.dimen.analog_hand_stroke));
+            handPaint.setStrokeWidth(getDimensionToPixel(R.dimen.analog_hand_stroke, scale));
             handPaint.setStrokeCap(Paint.Cap.ROUND);
         }
 
         private void initHourTextPaint() {
             hourTextPaint = new TextPaint();
-            hourTextPaint.setTextSize(getDimensionPixelSize(R.dimen.hour_text_size));
+            hourTextPaint.setTextSize(getDimensionToPixel(R.dimen.hour_text_size, scale));
             hourTextPaint.setColor(COLOR_HOUR);
             hourTextPaint.setTextAlign(Paint.Align.CENTER);
         }
@@ -262,9 +266,20 @@ public class GCBWatchFace extends CanvasWatchFaceService {
             innerArcPaint.setColor(Color.TRANSPARENT);
         }
 
+        private void initStartsInTextPaint() {
+            startsInTextPaint = new TextPaint();
+            startsInTextPaint.setColor(COLOR_GRAY);
+            startsInTextPaint.setStyle(Paint.Style.FILL);
+            startsInTextPaint.setTextSize(getDimensionToPixel(R.dimen.event_starts_in_font, scale));
+            startsInTextPaint.setTextAlign(Paint.Align.CENTER);
+            Rect textBounds = new Rect();
+            startsInTextPaint.getTextBounds(STARTS_IN, 0, STARTS_IN.length(), textBounds);
+            startsInHeight = textBounds.height();
+        }
+
         @Override
         public void onDestroy() {
-            mUpdateTimeHandler.removeMessages(MSG_UPDATE_TIME);
+            updateTimeHandler.removeMessages(MSG_UPDATE_TIME);
             super.onDestroy();
         }
 
@@ -283,8 +298,8 @@ public class GCBWatchFace extends CanvasWatchFaceService {
         @Override
         public void onAmbientModeChanged(boolean inAmbientMode) {
             super.onAmbientModeChanged(inAmbientMode);
-            if (mAmbient != inAmbientMode) {
-                mAmbient = inAmbientMode;
+            if (ambientMode != inAmbientMode) {
+                ambientMode = inAmbientMode;
                 if (mLowBitAmbient) {
                     setAntiAliasForPaints(!inAmbientMode);
                 }
@@ -304,6 +319,7 @@ public class GCBWatchFace extends CanvasWatchFaceService {
             gradientPaint.setAntiAlias(antiAliasOn);
             innerArcPaint.setAntiAlias(antiAliasOn);
             hourTextPaint.setAntiAlias(antiAliasOn);
+            startsInTextPaint.setAntiAlias(antiAliasOn);
         }
 
         /**
@@ -357,6 +373,7 @@ public class GCBWatchFace extends CanvasWatchFaceService {
 //            canvas.drawText(getHourToDisplay(time), centerX, centerY, hourTextPaint);
 
             drawEventName(canvas, innerOval, "Lorem ipsum dolor sit amet, consectetur adipiscing elit.", centerX, centerY);
+            canvas.drawText(STARTS_IN, centerX, centerY + startsInHeight, startsInTextPaint);
         }
 
         private void initWatchFaceBitmap(Rect bounds, float stroke) {
@@ -457,24 +474,34 @@ public class GCBWatchFace extends CanvasWatchFaceService {
             faceCanvas.drawArc(arcRect, -90, angle, true, arcPaint);
         }
 
+        /**
+         * Draw event name above inner oval diameter.
+         * @param canvas 
+         * @param innerOval
+         * @param eventName
+         * @param centerX - bounds center x
+         * @param centerY - bounds center y
+         */
         private void drawEventName(Canvas canvas, RectF innerOval, CharSequence eventName, float centerX, float centerY) {
-            textView.setText(eventName);
-            textView.setDrawingCacheEnabled(true);
-            textView.measure(MeasureSpec.makeMeasureSpec(1, MeasureSpec.EXACTLY),
+            eventNameTextView.setText(eventName);
+            eventNameTextView.setDrawingCacheEnabled(true);
+            eventNameTextView.measure(MeasureSpec.makeMeasureSpec(1, MeasureSpec.EXACTLY),
                     MeasureSpec.makeMeasureSpec(0, MeasureSpec.UNSPECIFIED));
 
-            int measuredHeight = textView.getMeasuredHeight();
+            int measuredHeight = eventNameTextView.getMeasuredHeight();
             float radius = innerOval.width() / 2;
             int desiredWidth = (int) Math.sqrt(Math.pow(radius, 2) - Math.pow(measuredHeight, 2)) * 2;
-
-            textView.measure(MeasureSpec.makeMeasureSpec(desiredWidth, MeasureSpec.EXACTLY),
+            eventNameTextView.measure(MeasureSpec.makeMeasureSpec(desiredWidth, MeasureSpec.EXACTLY),
                     MeasureSpec.makeMeasureSpec(0, MeasureSpec.UNSPECIFIED));
+            eventNameTextView.layout(0, 0, eventNameTextView.getMeasuredWidth(), eventNameTextView.getMeasuredHeight());
+            if (eventNameTextView.getDrawingCache() != null) {
+                canvas.drawBitmap(eventNameTextView.getDrawingCache(), centerX - eventNameTextView.getMeasuredWidth() / 2, centerY -
+                                eventNameTextView.getMeasuredHeight(),
+                        bitmapPaint);
+            }
 
-            textView.layout(0, 0, textView.getMeasuredWidth(), textView.getMeasuredHeight());
-            canvas.drawBitmap(textView.getDrawingCache(), centerX - textView.getMeasuredWidth() / 2, centerY -
-                            textView.getMeasuredHeight(),
-                    bitmapPaint);
-            textView.setDrawingCacheEnabled(false);
+
+            eventNameTextView.setDrawingCacheEnabled(false);
         }
 
         private String getHourToDisplay(GregorianCalendar calendar) {
@@ -505,35 +532,35 @@ public class GCBWatchFace extends CanvasWatchFaceService {
         }
 
         private void registerReceiver() {
-            if (mRegisteredTimeZoneReceiver) {
+            if (registeredTimeZoneReceiver) {
                 return;
             }
-            mRegisteredTimeZoneReceiver = true;
+            registeredTimeZoneReceiver = true;
             IntentFilter filter = new IntentFilter(Intent.ACTION_TIMEZONE_CHANGED);
-            GCBWatchFace.this.registerReceiver(mTimeZoneReceiver, filter);
+            GCBWatchFace.this.registerReceiver(timeZoneReceiver, filter);
         }
 
         private void unregisterReceiver() {
-            if (!mRegisteredTimeZoneReceiver) {
+            if (!registeredTimeZoneReceiver) {
                 return;
             }
-            mRegisteredTimeZoneReceiver = false;
-            GCBWatchFace.this.unregisterReceiver(mTimeZoneReceiver);
+            registeredTimeZoneReceiver = false;
+            GCBWatchFace.this.unregisterReceiver(timeZoneReceiver);
         }
 
         /**
-         * Starts the {@link #mUpdateTimeHandler} timer if it should be running and isn't currently
+         * Starts the {@link #updateTimeHandler} timer if it should be running and isn't currently
          * or stops it if it shouldn't be running but currently is.
          */
         private void updateTimer() {
-            mUpdateTimeHandler.removeMessages(MSG_UPDATE_TIME);
+            updateTimeHandler.removeMessages(MSG_UPDATE_TIME);
             if (shouldTimerBeRunning()) {
-                mUpdateTimeHandler.sendEmptyMessage(MSG_UPDATE_TIME);
+                updateTimeHandler.sendEmptyMessage(MSG_UPDATE_TIME);
             }
         }
 
         /**
-         * Returns whether the {@link #mUpdateTimeHandler} timer should be running. The timer should
+         * Returns whether the {@link #updateTimeHandler} timer should be running. The timer should
          * only run when we're visible and in interactive mode.
          */
         private boolean shouldTimerBeRunning() {
@@ -549,7 +576,7 @@ public class GCBWatchFace extends CanvasWatchFaceService {
                 long timeMs = System.currentTimeMillis();
                 long delayMs = INTERACTIVE_UPDATE_RATE_MS
                         - (timeMs % INTERACTIVE_UPDATE_RATE_MS);
-                mUpdateTimeHandler.sendEmptyMessageDelayed(MSG_UPDATE_TIME, delayMs);
+                updateTimeHandler.sendEmptyMessageDelayed(MSG_UPDATE_TIME, delayMs);
             }
         }
     }
