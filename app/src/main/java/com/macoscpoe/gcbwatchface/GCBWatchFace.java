@@ -35,6 +35,7 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.TimeZone;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Analog watch face with a ticking second hand. In ambient mode, the second hand isn't shown. On
@@ -51,6 +52,16 @@ public class GCBWatchFace extends CanvasWatchFaceService {
      * Handler message id for updating the time periodically in interactive mode.
      */
     private static final int MSG_UPDATE_TIME = 0;
+
+    private static final EventViewModel EVENT;
+
+    static {
+        Date date = new Date();
+        long eventTime = TimeUnit.MINUTES.toMillis(26);
+
+        EVENT = new EventViewModel("Lorem ipsum dolor sit amet, consectetur adipiscing elit.", new Date(date.getTime
+                () + eventTime), "Warsaw");
+    }
 
     @Override
     public GCBWatchFaceEngine onCreateEngine() {
@@ -78,16 +89,9 @@ public class GCBWatchFace extends CanvasWatchFaceService {
     }
 
     private class GCBWatchFaceEngine extends CanvasWatchFaceService.Engine {
-        private int colorSoftBlue;
-        private int colorGreenBlue;
-        private int colorBlush;
-        private int colorLipstick;
-        private int colorWhite;
-        private int colorNeutral;
-        private int colorGray;
-
         private static final int PIECES_GAP = 8;
-
+        private static final int ALL_DIGITS = 1234567890;
+        private static final String MINUTES_FONT_FAMILY = "sans-serif-light";
         private int[] ovalGradient;
         /**
          * Positions tweaked for best gradient position on canvas rotation
@@ -99,10 +103,10 @@ public class GCBWatchFace extends CanvasWatchFaceService {
         private final Handler updateTimeHandler = new EngineHandler(this);
         private boolean registeredTimeZoneReceiver = false;
         private boolean ambientMode;
-        private float scale;
+
         /**
          * Whether the display supports fewer bits for each color in ambient mode. When true, we
-         * disable anti-aliasing in ambient mode. - TODO not yet handled
+         * disable anti-aliasing in ambient mode.
          */
         boolean lowBitAmbient;
         boolean drawInDebugMode = false;
@@ -121,6 +125,7 @@ public class GCBWatchFace extends CanvasWatchFaceService {
         private Paint innerArcPaint;
         private TextPaint hourTextPaint;
         private TextPaint startsInTextPaint;
+        private TextPaint minutesTextPaint;
 
         private RectF oval;
         private RectF innerOval;
@@ -132,7 +137,17 @@ public class GCBWatchFace extends CanvasWatchFaceService {
         private float ovalsGap;
 
         private int backgroundColor;
+        private int colorSoftBlue;
+        private int colorGreenBlue;
+        private int colorBlush;
+        private int colorLipstick;
+        private int colorWhite;
+        private int colorNeutral;
+        private int colorGray;
+
         private int startsInHeight;
+        private int startInMinutesHeight;
+        private int startInMinutesPadding;
 
         private String startsIn;
 
@@ -159,12 +174,11 @@ public class GCBWatchFace extends CanvasWatchFaceService {
         }
 
         private void initResources(Context context) {
-            scale = getResources().getDisplayMetrics().density;
-
-            strokeSize = getDimensionToPixel(R.dimen.outside_oval_stroke, scale);
-            innerStrokeSize = getDimensionToPixel(R.dimen.inner_oval_stroke, scale);
-            padding = getDimensionToPixel(R.dimen.face_padding, scale);
-            ovalsGap = getDimensionToPixel(R.dimen.ovals_gap, scale);
+            strokeSize = getDimensionToPixel(R.dimen.outside_oval_stroke);
+            innerStrokeSize = getDimensionToPixel(R.dimen.inner_oval_stroke);
+            padding = getDimensionToPixel(R.dimen.face_padding);
+            ovalsGap = getDimensionToPixel(R.dimen.ovals_gap);
+            startInMinutesPadding = getDimensionToPixel(R.dimen.start_in_minutes_padding);
 
             startsIn = getString(R.string.starts_in);
 
@@ -176,7 +190,7 @@ public class GCBWatchFace extends CanvasWatchFaceService {
             colorWhite = ContextCompat.getColor(context, R.color.white);
             colorNeutral = ContextCompat.getColor(context, R.color.neutral);
             colorGray = ContextCompat.getColor(context, R.color.grey_font);
-            
+
             ovalGradient = new int[]{colorGreenBlue, colorSoftBlue, colorBlush,
                     colorLipstick, colorGreenBlue};
         }
@@ -224,10 +238,12 @@ public class GCBWatchFace extends CanvasWatchFaceService {
             initBitmapPaint();
             initInactiveInnerPiecesPaint();
             initStartsInTextPaint();
+            initMinutesTextPaint();
             setAntiAliasForPaints(true);
         }
 
-        private int getDimensionToPixel(int id, float scale) {
+        private int getDimensionToPixel(int id) {
+            float scale = getResources().getDisplayMetrics().density;
             // Convert the dps to pixels, based on density scale
             return (int) (getResources().getDimension(id) * scale + 0.5f);
         }
@@ -235,13 +251,13 @@ public class GCBWatchFace extends CanvasWatchFaceService {
         private void initHandPaint() {
             handPaint = new Paint();
             handPaint.setColor(colorNeutral);
-            handPaint.setStrokeWidth(getDimensionToPixel(R.dimen.analog_hand_stroke, scale));
+            handPaint.setStrokeWidth(getDimensionToPixel(R.dimen.analog_hand_stroke));
             handPaint.setStrokeCap(Paint.Cap.ROUND);
         }
 
         private void initHourTextPaint() {
             hourTextPaint = new TextPaint();
-            hourTextPaint.setTextSize(getDimensionToPixel(R.dimen.hour_text_size, scale));
+            hourTextPaint.setTextSize(getDimensionToPixel(R.dimen.hour_text_size));
             hourTextPaint.setColor(colorWhite);
             hourTextPaint.setTextAlign(Paint.Align.CENTER);
         }
@@ -282,11 +298,28 @@ public class GCBWatchFace extends CanvasWatchFaceService {
             startsInTextPaint = new TextPaint();
             startsInTextPaint.setColor(colorGray);
             startsInTextPaint.setStyle(Paint.Style.FILL);
-            startsInTextPaint.setTextSize(getDimensionToPixel(R.dimen.event_starts_in_font, scale));
+            startsInTextPaint.setTextSize(getDimensionToPixel(R.dimen.event_starts_in_font));
             startsInTextPaint.setTextAlign(Paint.Align.CENTER);
             Rect textBounds = new Rect();
             startsInTextPaint.getTextBounds(startsIn, 0, startsIn.length(), textBounds);
             startsInHeight = textBounds.height();
+        }
+
+        private void initMinutesTextPaint() {
+            minutesTextPaint = new TextPaint();
+            minutesTextPaint.setColor(colorWhite);
+            minutesTextPaint.setStyle(Paint.Style.FILL);
+            minutesTextPaint.setTextSize(getDimensionToPixel(R.dimen.minutes_to_event_font));
+            minutesTextPaint.setTextAlign(Paint.Align.CENTER);
+            Typeface typeface = Typeface.create(MINUTES_FONT_FAMILY, Typeface.NORMAL);
+            if (typeface == null) {
+                typeface = Typeface.DEFAULT;
+            }
+            minutesTextPaint.setTypeface(typeface);
+            Rect textBounds = new Rect();
+            String minutesString = getResources().getQuantityString(R.plurals.minutes, ALL_DIGITS, ALL_DIGITS);
+            minutesTextPaint.getTextBounds(minutesString, 0, minutesString.length(), textBounds);
+            startInMinutesHeight = textBounds.height();
         }
 
         @Override
@@ -332,6 +365,7 @@ public class GCBWatchFace extends CanvasWatchFaceService {
             innerArcPaint.setAntiAlias(antiAliasOn);
             hourTextPaint.setAntiAlias(antiAliasOn);
             startsInTextPaint.setAntiAlias(antiAliasOn);
+            minutesTextPaint.setAntiAlias(antiAliasOn);
         }
 
         /**
@@ -377,15 +411,15 @@ public class GCBWatchFace extends CanvasWatchFaceService {
                 drawWatchFace(faceBitmap, bounds, strokeSize, minutes);
             }
 
-            drawMeetingIndicator(faceBitmap, 26);
+            drawMeetingIndicator(faceBitmap, EVENT.getHourMinutes());
 
             canvas.drawBitmap(faceBitmap, padding - strokeSize, padding - strokeSize, bitmapPaint);
 
-//            canvas.drawText(getHourToDisplay(time), centerX, centerY, hourTextPaint);
-
-            drawEventName(canvas, innerOval, "Lorem ipsum dolor sit amet, consectetur adipiscing elit.", centerX, centerY);
+            drawEventName(canvas, innerOval, EVENT.getName(), centerX, centerY);
             canvas.drawText(startsIn, centerX, centerY + startsInHeight, startsInTextPaint);
-
+            canvas.drawText(EVENT.getMinutesToEvent(getResources(), time.getTimeInMillis()), centerX, centerY +
+                            startsInHeight + startInMinutesPadding + startInMinutesHeight,
+                    minutesTextPaint);
 
         }
 
@@ -489,11 +523,12 @@ public class GCBWatchFace extends CanvasWatchFaceService {
 
         /**
          * Draw event name above inner oval diameter.
+         *
          * @param canvas
          * @param innerOval
          * @param eventName
-         * @param centerX - bounds center x
-         * @param centerY - bounds center y
+         * @param centerX   - bounds center x
+         * @param centerY   - bounds center y
          */
         private void drawEventName(Canvas canvas, RectF innerOval, CharSequence eventName, float centerX, float centerY) {
             eventNameTextView.setText(eventName);

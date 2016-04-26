@@ -14,9 +14,9 @@ public class EventViewModel {
     private GregorianCalendar calendar;
 
     public EventViewModel(String name, Date date, String place) {
-        this.name = name;
-        this.date = date;
-        this.place = place;
+        setName(name);
+        setDate(date);
+        setPlace(place);
     }
 
     public String getName() {
@@ -32,6 +32,7 @@ public class EventViewModel {
     }
 
     public void setDate(Date date) {
+        calendar = new GregorianCalendar();
         calendar.setTime(date);
         this.date = date;
     }
@@ -45,8 +46,8 @@ public class EventViewModel {
     }
 
     public String getMinutesToEvent(Resources resources, long datePointTime) {
-        long minutes = TimeUnit.MINUTES.toMinutes(date.getTime() - datePointTime);
-        return resources.getQuantityString(R.plurals.minutes, (int) minutes);
+        int minutes = (int) TimeUnit.MILLISECONDS.toMinutes(date.getTime() - datePointTime);
+        return resources.getQuantityString(R.plurals.minutes, minutes, minutes);
     }
 
     public int getHourMinutes() {
