@@ -116,7 +116,6 @@ public class GCBWatchFace extends CanvasWatchFaceService {
         private Canvas indicatorCanvas;
 
         private Paint bitmapPaint;
-        private Paint handPaint;
         private Paint arcPaint;
         private Paint innerOvalPaint;
         private Paint gradientPaint;
@@ -238,7 +237,6 @@ public class GCBWatchFace extends CanvasWatchFaceService {
         }
 
         private void initPaints() {
-            initHandPaint();
             initGradientPaint();
             initHourTextPaint();
             initInactivePiecesPaint();
@@ -254,13 +252,6 @@ public class GCBWatchFace extends CanvasWatchFaceService {
             float scale = getResources().getDisplayMetrics().density;
             // Convert the dps to pixels, based on density scale
             return (int) (getResources().getDimension(id) * scale + 0.5f);
-        }
-
-        private void initHandPaint() {
-            handPaint = new Paint();
-            handPaint.setColor(colorNeutral);
-            handPaint.setStrokeWidth(getDimensionToPixel(R.dimen.analog_hand_stroke));
-            handPaint.setStrokeCap(Paint.Cap.ROUND);
         }
 
         private void initHourTextPaint() {
@@ -366,7 +357,6 @@ public class GCBWatchFace extends CanvasWatchFaceService {
 
         private void setAntiAliasForPaints(boolean antiAliasOn) {
             bitmapPaint.setAntiAlias(antiAliasOn);
-            handPaint.setAntiAlias(antiAliasOn);
             arcPaint.setAntiAlias(antiAliasOn);
             innerOvalPaint.setAntiAlias(antiAliasOn);
             gradientPaint.setAntiAlias(antiAliasOn);
@@ -407,7 +397,6 @@ public class GCBWatchFace extends CanvasWatchFaceService {
 
             int seconds = time.get(Calendar.SECOND);
             int minutes = time.get(Calendar.MINUTE);
-            int hour = time.get(Calendar.HOUR_OF_DAY);
 
             initWatchFaceBitmap(bounds, strokeSize);
 
@@ -418,7 +407,6 @@ public class GCBWatchFace extends CanvasWatchFaceService {
                                 startsInHeight + startInMinutesPadding + startInMinutesHeight,
                         minutesTextPaint);
             } else {
-                drawSecondsClockHand(canvas, centerX, centerY, seconds);
                 hourTextPaint.setColor(minutes < 30 ? colorGreenBlue : colorLipstick);
                 canvas.drawText(getHourToDisplay(time), centerX, centerY + hourHeight / 2, hourTextPaint);
             }
@@ -438,14 +426,6 @@ public class GCBWatchFace extends CanvasWatchFaceService {
             if (faceBitmap == null) {
                 faceBitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
             }
-        }
-
-        private void drawSecondsClockHand(Canvas canvas, float centerX, float centerY, int seconds) {
-            float secLength = centerX - 30;
-            float secRot = seconds / 30f * (float) Math.PI;
-            float secX = (float) Math.sin(secRot) * secLength;
-            float secY = (float) -Math.cos(secRot) * secLength;
-            canvas.drawLine(centerX, centerY, centerX + secX, centerY + secY, handPaint);
         }
 
         private void drawMeetingIndicator(Bitmap faceBitmap, int minutes) {
