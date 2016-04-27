@@ -10,7 +10,7 @@ import java.util.Calendar;
 import java.util.GregorianCalendar;
 import java.util.TimeZone;
 
-public class HourDrawer {
+public class HourDrawer implements Drawer{
 
     private ColorPalette colorPalette;
     private Paint hourTextPaint;

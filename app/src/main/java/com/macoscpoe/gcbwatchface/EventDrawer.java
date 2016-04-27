@@ -13,7 +13,7 @@ import android.view.View;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
-public class EventDrawer {
+public class EventDrawer implements Drawer{
     private static final int MAX_TITLE_LINES = 2;
 
     private TextPaint startsInTextPaint;
