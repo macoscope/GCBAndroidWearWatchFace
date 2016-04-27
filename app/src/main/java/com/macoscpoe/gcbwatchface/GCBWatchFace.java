@@ -142,10 +142,10 @@ public class GCBWatchFace extends CanvasWatchFaceService {
         private void initResources(Context context) {
             colorPalette = new ColorPalette(context);
 
-            strokeSize = getDimensionToPixel(R.dimen.outside_oval_stroke);
-            innerStrokeSize = getDimensionToPixel(R.dimen.inner_oval_stroke);
-            padding = getDimensionToPixel(R.dimen.face_padding);
-            ovalsGap = getDimensionToPixel(R.dimen.ovals_gap);
+            strokeSize = MeasureUtil.getDimensionToPixel(getResources(), R.dimen.outside_oval_stroke);
+            innerStrokeSize = MeasureUtil.getDimensionToPixel(getResources(), R.dimen.inner_oval_stroke);
+            padding = MeasureUtil.getDimensionToPixel(getResources(), R.dimen.face_padding);
+            ovalsGap = MeasureUtil.getDimensionToPixel(getResources(), R.dimen.ovals_gap);
 
             typefaceLight = Typeface.create(MINUTES_FONT_FAMILY, Typeface.NORMAL);
             if (typefaceLight == null) {
@@ -184,15 +184,6 @@ public class GCBWatchFace extends CanvasWatchFaceService {
             initBitmapPaint();
             initInactiveInnerPiecesPaint();
             setAntiAliasForPaints(true);
-        }
-
-        /**
-         * @deprecated use {@link MeasureUtil}
-         */
-        private int getDimensionToPixel(int id) {
-            float scale = getResources().getDisplayMetrics().density;
-            // Convert the dps to pixels, based on density scale
-            return (int) (getResources().getDimension(id) * scale + 0.5f);
         }
 
         private void initInnerOvalPaint() {
@@ -324,7 +315,7 @@ public class GCBWatchFace extends CanvasWatchFaceService {
             float piece = (float) (Math.PI * innerOval.width() / 12);
             float gap = MeasureUtil.PIECES_GAP;
             if (innerOvalPaint.getPathEffect() == null) {
-                innerOvalPaint.setPathEffect(getDashedStrokeEffect(piece, gap));
+                innerOvalPaint.setPathEffect(PathEffectUtil.getDashedStrokeEffect(piece, gap));
             }
 
             float ovalRotation = (gap / 2 * 30) / piece;
@@ -347,13 +338,6 @@ public class GCBWatchFace extends CanvasWatchFaceService {
                 startAngle = (minutes * 6 / 30) * 30 - 60;
             }
             indicatorCanvas.drawArc(arcRect, startAngle, angle, true, innerArcPaint);
-        }
-
-        /**
-         * @deprecated
-         */
-        private DashPathEffect getDashedStrokeEffect(float line, float gap) {
-            return new DashPathEffect(new float[]{line - gap, gap}, 0);
         }
 
         @Override
