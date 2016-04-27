@@ -18,12 +18,10 @@ import android.graphics.Typeface;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
-import android.support.v4.content.ContextCompat;
 import android.support.wearable.watchface.CanvasWatchFaceService;
 import android.support.wearable.watchface.WatchFaceStyle;
 import android.text.TextPaint;
 import android.text.TextUtils;
-import android.text.format.Time;
 import android.view.Gravity;
 import android.view.SurfaceHolder;
 import android.view.View;
@@ -88,7 +86,6 @@ public class GCBWatchFace extends CanvasWatchFaceService {
 
     private class GCBWatchFaceEngine extends CanvasWatchFaceService.Engine {
         private static final int PIECES_GAP = 8;
-        private static final int ALL_DIGITS = 1234567890;
         private static final String MINUTES_FONT_FAMILY = "sans-serif-light";
 
         /**
@@ -112,7 +109,6 @@ public class GCBWatchFace extends CanvasWatchFaceService {
         private ColorPalette colorPalette;
 
         private Calendar time;
-        private Calendar hourCalendar;
         private Bitmap faceBitmap;
         private Canvas faceCanvas;
         private Canvas indicatorCanvas;
@@ -122,7 +118,6 @@ public class GCBWatchFace extends CanvasWatchFaceService {
         private Paint innerOvalPaint;
         private Paint gradientPaint;
         private Paint innerArcPaint;
-        private TextPaint hourTextPaint;
         private TextPaint startsInTextPaint;
         private TextPaint minutesTextPaint;
 
@@ -138,12 +133,13 @@ public class GCBWatchFace extends CanvasWatchFaceService {
         private int startsInHeight;
         private int startInMinutesHeight;
         private int startInMinutesPadding;
-        private int hourHeight;
 
         private String startsIn;
 
         private TextView eventNameTextView;
         private Typeface typefaceLight;
+
+        private HourDrawer hourDrawer;
 
         private final BroadcastReceiver timeZoneReceiver = new BroadcastReceiver() {
             @Override
@@ -151,7 +147,9 @@ public class GCBWatchFace extends CanvasWatchFaceService {
                 TimeZone timeZone = TimeZone.getTimeZone(intent.getStringExtra("time-zone"));
                 time.setTimeZone(timeZone);
                 time.setTimeInMillis(System.currentTimeMillis());
-                hourCalendar.setTimeZone(timeZone);
+                if (hourDrawer != null) {
+                    hourDrawer.setTimeZone(timeZone);
+                }
             }
         };
 
@@ -163,8 +161,13 @@ public class GCBWatchFace extends CanvasWatchFaceService {
             Context context = GCBWatchFace.this.getApplicationContext();
             initResources(context);
             initEventNameTextView(context);
+            initDrawers();
             initPaints();
             initRectangles();
+        }
+
+        private void initDrawers() {
+            hourDrawer = new HourDrawer(colorPalette, typefaceLight, getDimensionToPixel(R.dimen.hour_text_size));
         }
 
         private void initResources(Context context) {
@@ -216,12 +219,10 @@ public class GCBWatchFace extends CanvasWatchFaceService {
 
         private void initTime() {
             time = new GregorianCalendar();
-            hourCalendar = new GregorianCalendar();
         }
 
         private void initPaints() {
             initGradientPaint();
-            initHourTextPaint();
             initInactivePiecesPaint();
             initInnerOvalPaint();
             initBitmapPaint();
@@ -237,16 +238,6 @@ public class GCBWatchFace extends CanvasWatchFaceService {
             return (int) (getResources().getDimension(id) * scale + 0.5f);
         }
 
-        private void initHourTextPaint() {
-            hourTextPaint = new TextPaint();
-            hourTextPaint.setTextSize(getDimensionToPixel(R.dimen.hour_text_size));
-            hourTextPaint.setTextAlign(Paint.Align.CENTER);
-            hourTextPaint.setTypeface(typefaceLight);
-            Rect textBounds = new Rect();
-            String digits = String.format("%d", ALL_DIGITS);
-            hourTextPaint.getTextBounds(digits, 0, digits.length(), textBounds);
-            hourHeight = textBounds.height();
-        }
 
         private void initGradientPaint() {
             gradientPaint = new Paint();
@@ -299,7 +290,8 @@ public class GCBWatchFace extends CanvasWatchFaceService {
             minutesTextPaint.setTextAlign(Paint.Align.CENTER);
             minutesTextPaint.setTypeface(typefaceLight);
             Rect textBounds = new Rect();
-            String minutesString = getResources().getQuantityString(R.plurals.minutes, ALL_DIGITS, ALL_DIGITS);
+            String minutesString = getResources().getQuantityString(R.plurals.minutes, MeasureUtil.ALL_DIGITS,
+                    MeasureUtil.ALL_DIGITS);
             minutesTextPaint.getTextBounds(minutesString, 0, minutesString.length(), textBounds);
             startInMinutesHeight = textBounds.height();
         }
@@ -328,6 +320,7 @@ public class GCBWatchFace extends CanvasWatchFaceService {
             if (ambientMode != inAmbientMode) {
                 ambientMode = inAmbientMode;
                 if (lowBitAmbient) {
+                    hourDrawer.setAmbientMode(inAmbientMode);
                     setAntiAliasForPaints(!inAmbientMode);
                 }
                 invalidate();
@@ -344,7 +337,6 @@ public class GCBWatchFace extends CanvasWatchFaceService {
             innerOvalPaint.setAntiAlias(antiAliasOn);
             gradientPaint.setAntiAlias(antiAliasOn);
             innerArcPaint.setAntiAlias(antiAliasOn);
-            hourTextPaint.setAntiAlias(antiAliasOn);
             startsInTextPaint.setAntiAlias(antiAliasOn);
             minutesTextPaint.setAntiAlias(antiAliasOn);
         }
@@ -377,8 +369,6 @@ public class GCBWatchFace extends CanvasWatchFaceService {
 
             float centerX = bounds.centerX();
             float centerY = bounds.centerY();
-
-            int seconds = time.get(Calendar.SECOND);
             int minutes = time.get(Calendar.MINUTE);
 
             initWatchFaceBitmap(bounds, strokeSize);
@@ -390,8 +380,7 @@ public class GCBWatchFace extends CanvasWatchFaceService {
                                 startsInHeight + startInMinutesPadding + startInMinutesHeight,
                         minutesTextPaint);
             } else {
-                hourTextPaint.setColor(colorPalette.getHourColor(minutes));
-                canvas.drawText(getHourToDisplay(time), centerX, centerY + hourHeight / 2, hourTextPaint);
+                hourDrawer.draw(canvas, time, centerX, centerY);
             }
 
             drawWatchFace(faceBitmap, bounds, strokeSize, minutes);
@@ -497,11 +486,8 @@ public class GCBWatchFace extends CanvasWatchFaceService {
         /**
          * Draw event name above inner oval diameter.
          *
-         * @param canvas
-         * @param innerOval
-         * @param eventName
-         * @param centerX   - bounds center x
-         * @param centerY   - bounds center y
+         * @param centerX - bounds center x
+         * @param centerY - bounds center y
          */
         private void drawEventName(Canvas canvas, RectF innerOval, CharSequence eventName, float centerX, float centerY) {
             eventNameTextView.setText(eventName);
@@ -520,20 +506,7 @@ public class GCBWatchFace extends CanvasWatchFaceService {
                                 eventNameTextView.getMeasuredHeight(),
                         bitmapPaint);
             }
-
-
             eventNameTextView.setDrawingCacheEnabled(false);
-        }
-        //TODO test
-        private String getHourToDisplay(Calendar calendar) {
-            hourCalendar.setTimeInMillis(calendar.getTimeInMillis());
-            int hour = hourCalendar.get(Calendar.HOUR_OF_DAY);
-            int minutes = hourCalendar.get(Calendar.MINUTE);
-            if (minutes >= 30) {
-                hourCalendar.add(Calendar.HOUR_OF_DAY, 1);
-                hour = hourCalendar.get(Calendar.HOUR_OF_DAY);
-            }
-            return String.format("%d", hour);
         }
 
         @Override
@@ -545,7 +518,7 @@ public class GCBWatchFace extends CanvasWatchFaceService {
                 TimeZone defaultZone = TimeZone.getDefault();
                 time.setTimeZone(defaultZone);
                 time.setTimeInMillis(System.currentTimeMillis());
-                hourCalendar.setTimeZone(defaultZone);
+                hourDrawer.setTimeZone(defaultZone);
             } else {
                 unregisterReceiver();
             }
