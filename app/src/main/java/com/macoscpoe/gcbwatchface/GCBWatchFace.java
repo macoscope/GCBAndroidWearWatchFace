@@ -23,6 +23,7 @@ import android.support.wearable.watchface.CanvasWatchFaceService;
 import android.support.wearable.watchface.WatchFaceStyle;
 import android.text.TextPaint;
 import android.text.TextUtils;
+import android.text.format.Time;
 import android.view.Gravity;
 import android.view.SurfaceHolder;
 import android.view.View;
@@ -56,11 +57,8 @@ public class GCBWatchFace extends CanvasWatchFaceService {
     private static final EventViewModel EVENT;
 
     static {
-        Date date = new Date();
-        long eventTime = TimeUnit.MINUTES.toMillis(26);
-
-        EVENT = new EventViewModel("Lorem ipsum dolor sit amet, consectetur adipiscing elit.", new Date(date.getTime
-                () + eventTime), "Warsaw");
+        long eventTime = System.currentTimeMillis() + TimeUnit.MINUTES.toMillis(26);
+        EVENT = new EventViewModel("Lorem ipsum dolor sit amet, consectetur adipiscing elit.", new Date(eventTime), "Warsaw");
     }
 
     @Override
@@ -111,8 +109,8 @@ public class GCBWatchFace extends CanvasWatchFaceService {
         boolean lowBitAmbient;
         boolean drawInEventMode = false;
 
-        private GregorianCalendar time;
-
+        private Calendar time;
+        private Calendar hourCalendar;
         private Bitmap faceBitmap;
         private Canvas faceCanvas;
         private Canvas indicatorCanvas;
@@ -158,8 +156,10 @@ public class GCBWatchFace extends CanvasWatchFaceService {
         private final BroadcastReceiver timeZoneReceiver = new BroadcastReceiver() {
             @Override
             public void onReceive(Context context, Intent intent) {
-                time.setTimeZone(TimeZone.getTimeZone(intent.getStringExtra("time-zone")));
-                time.setTime(new Date());
+                TimeZone timeZone = TimeZone.getTimeZone(intent.getStringExtra("time-zone"));
+                time.setTimeZone(timeZone);
+                time.setTimeInMillis(System.currentTimeMillis());
+                hourCalendar.setTimeZone(timeZone);
             }
         };
 
@@ -234,6 +234,7 @@ public class GCBWatchFace extends CanvasWatchFaceService {
 
         private void initTime() {
             time = new GregorianCalendar();
+            hourCalendar = new GregorianCalendar();
         }
 
         private void initPaints() {
@@ -398,7 +399,7 @@ public class GCBWatchFace extends CanvasWatchFaceService {
 
         @Override
         public void onDraw(Canvas canvas, Rect bounds) {
-            time.setTime(new Date());
+            time.setTimeInMillis(System.currentTimeMillis());
             canvas.drawColor(backgroundColor);
 
             float centerX = bounds.centerX();
@@ -419,7 +420,6 @@ public class GCBWatchFace extends CanvasWatchFaceService {
             } else {
                 drawSecondsClockHand(canvas, centerX, centerY, seconds);
                 hourTextPaint.setColor(minutes < 30 ? colorGreenBlue : colorLipstick);
-                getHourToDisplay(time);
                 canvas.drawText(getHourToDisplay(time), centerX, centerY + hourHeight / 2, hourTextPaint);
             }
 
@@ -560,13 +560,14 @@ public class GCBWatchFace extends CanvasWatchFaceService {
 
             eventNameTextView.setDrawingCacheEnabled(false);
         }
-
-        private String getHourToDisplay(GregorianCalendar calendar) {
-            int hour = calendar.get(Calendar.HOUR_OF_DAY);
-            int minutes = calendar.get(Calendar.MINUTE);
+        //TODO test
+        private String getHourToDisplay(Calendar calendar) {
+            hourCalendar.setTimeInMillis(calendar.getTimeInMillis());
+            int hour = hourCalendar.get(Calendar.HOUR_OF_DAY);
+            int minutes = hourCalendar.get(Calendar.MINUTE);
             if (minutes >= 30) {
-                calendar.add(Calendar.HOUR_OF_DAY, 1);
-                hour = calendar.get(Calendar.HOUR_OF_DAY);
+                hourCalendar.add(Calendar.HOUR_OF_DAY, 1);
+                hour = hourCalendar.get(Calendar.HOUR_OF_DAY);
             }
             return String.format("%d", hour);
         }
@@ -577,8 +578,10 @@ public class GCBWatchFace extends CanvasWatchFaceService {
             if (visible) {
                 registerReceiver();
                 // Update time zone in case it changed while we weren't visible.
-                time.setTimeZone(TimeZone.getDefault());
-                time.setTime(new Date());
+                TimeZone defaultZone = TimeZone.getDefault();
+                time.setTimeZone(defaultZone);
+                time.setTimeInMillis(System.currentTimeMillis());
+                hourCalendar.setTimeZone(defaultZone);
             } else {
                 unregisterReceiver();
             }
