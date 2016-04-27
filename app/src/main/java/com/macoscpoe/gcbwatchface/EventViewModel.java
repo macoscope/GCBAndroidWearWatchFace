@@ -11,7 +11,7 @@ public class EventViewModel {
     private String name;
     private Date date;
     private String place;
-    private GregorianCalendar calendar;
+    private Calendar calendar;
 
     public EventViewModel(String name, Date date, String place) {
         setName(name);

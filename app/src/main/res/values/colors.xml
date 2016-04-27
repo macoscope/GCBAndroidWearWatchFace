@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <color name="analog_hands">#80cccccc</color>
     <color name="background">#000000</color>
     <color name="soft_blue">#6195e4</color>
     <color name="green_blue">#22daa8</color>
