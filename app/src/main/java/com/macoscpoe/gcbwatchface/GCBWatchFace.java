@@ -6,11 +6,7 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
-import android.graphics.Color;
-import android.graphics.DashPathEffect;
 import android.graphics.Paint;
-import android.graphics.PorterDuff;
-import android.graphics.PorterDuffXfermode;
 import android.graphics.Rect;
 import android.graphics.RectF;
 import android.graphics.Typeface;
@@ -94,26 +90,23 @@ public class GCBWatchFace extends CanvasWatchFaceService {
 
         private Calendar time;
         private Bitmap faceBitmap;
-        private Canvas indicatorCanvas;
-
         private Paint bitmapPaint;
-        private Paint innerOvalPaint;
-        private Paint innerArcPaint;
 
-        private RectF oval;
+        private RectF outerOval;
         private RectF innerOval;
         private RectF arcRect;
 
         private float strokeSize;
-        private float innerStrokeSize;
+
         private float padding;
-        private float ovalsGap;
+
 
         private Typeface typefaceLight;
 
         private HourDrawer hourDrawer;
         private EventDrawer eventDrawer;
         private FaceDrawer faceDrawer;
+        private EventIndicatorDrawer indicatorDrawer;
 
         private final BroadcastReceiver timeZoneReceiver = new BroadcastReceiver() {
             @Override
@@ -143,9 +136,7 @@ public class GCBWatchFace extends CanvasWatchFaceService {
             colorPalette = new ColorPalette(context);
 
             strokeSize = MeasureUtil.getDimensionToPixel(getResources(), R.dimen.outside_oval_stroke);
-            innerStrokeSize = MeasureUtil.getDimensionToPixel(getResources(), R.dimen.inner_oval_stroke);
             padding = MeasureUtil.getDimensionToPixel(getResources(), R.dimen.face_padding);
-            ovalsGap = MeasureUtil.getDimensionToPixel(getResources(), R.dimen.ovals_gap);
 
             typefaceLight = Typeface.create(MINUTES_FONT_FAMILY, Typeface.NORMAL);
             if (typefaceLight == null) {
@@ -158,10 +149,15 @@ public class GCBWatchFace extends CanvasWatchFaceService {
                     R.dimen.hour_text_size));
             eventDrawer = new EventDrawer(context, typefaceLight, colorPalette, bitmapPaint);
             faceDrawer = new FaceDrawer(colorPalette, padding, strokeSize);
+            indicatorDrawer = new EventIndicatorDrawer(colorPalette,
+                    MeasureUtil.getDimensionToPixel(getResources(), R.dimen.inner_oval_stroke),
+                    strokeSize,
+                    MeasureUtil.getDimensionToPixel(getResources(), R.dimen.ovals_gap));
+
         }
 
         private void initRectangles() {
-            oval = new RectF();
+            outerOval = new RectF();
             arcRect = new RectF();
             innerOval = new RectF();
         }
@@ -180,30 +176,14 @@ public class GCBWatchFace extends CanvasWatchFaceService {
         }
 
         private void initPaints() {
-            initInnerOvalPaint();
             initBitmapPaint();
-            initInactiveInnerPiecesPaint();
-            setAntiAliasForPaints(true);
-        }
-
-        private void initInnerOvalPaint() {
-            innerOvalPaint = new Paint();
-            innerOvalPaint.setColor(colorPalette.colorWhite);
-            innerOvalPaint.setStrokeWidth(innerStrokeSize);
-            innerOvalPaint.setStyle(Paint.Style.STROKE);
         }
 
         private void initBitmapPaint() {
             bitmapPaint = new Paint();
-            bitmapPaint.setFilterBitmap(true);
+            bitmapPaint.setAntiAlias(true);
         }
 
-
-        private void initInactiveInnerPiecesPaint() {
-            innerArcPaint = new Paint();
-            innerArcPaint.setXfermode(new PorterDuffXfermode(PorterDuff.Mode.SRC_IN));
-            innerArcPaint.setColor(Color.TRANSPARENT);
-        }
 
         @Override
         public void onDestroy() {
@@ -232,7 +212,8 @@ public class GCBWatchFace extends CanvasWatchFaceService {
                     faceDrawer.setAmbientMode(inAmbientMode);
                     hourDrawer.setAmbientMode(inAmbientMode);
                     eventDrawer.setAmbientMode(inAmbientMode);
-                    setAntiAliasForPaints(!inAmbientMode);
+                    indicatorDrawer.setAmbientMode(inAmbientMode);
+                    bitmapPaint.setAntiAlias(!inAmbientMode);
                 }
                 invalidate();
             }
@@ -240,12 +221,6 @@ public class GCBWatchFace extends CanvasWatchFaceService {
             // Whether the timer should be running depends on whether we're visible (as well as
             // whether we're in ambient mode), so we may need to start or stop the timer.
             updateTimer();
-        }
-
-        private void setAntiAliasForPaints(boolean antiAliasOn) {
-            bitmapPaint.setAntiAlias(antiAliasOn);
-            innerOvalPaint.setAntiAlias(antiAliasOn);
-            innerArcPaint.setAntiAlias(antiAliasOn);
         }
 
         /**
@@ -286,9 +261,9 @@ public class GCBWatchFace extends CanvasWatchFaceService {
                 hourDrawer.draw(canvas, time, centerX, centerY);
             }
 
-            faceDrawer.draw(faceBitmap, oval, arcRect, bounds.width(), bounds.height(), minutes);
+            faceDrawer.draw(faceBitmap, outerOval, arcRect, bounds.width(), bounds.height(), minutes);
 
-            drawMeetingIndicator(faceBitmap, EVENT.getHourMinutes());
+            indicatorDrawer.draw(faceBitmap,  EVENT.getHourMinutes(), outerOval, innerOval, arcRect);
 
             canvas.drawBitmap(faceBitmap, padding - strokeSize, padding - strokeSize, bitmapPaint);
 
@@ -301,43 +276,6 @@ public class GCBWatchFace extends CanvasWatchFaceService {
             if (faceBitmap == null) {
                 faceBitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
             }
-        }
-
-        private void drawMeetingIndicator(Bitmap faceBitmap, int minutes) {
-            float ovalsPadding = innerStrokeSize / 2 + ovalsGap + strokeSize / 2;
-            innerOval.set(oval.left + ovalsPadding, oval.top + ovalsPadding, oval.right - ovalsPadding,
-                    oval.bottom - ovalsPadding);
-
-            if (indicatorCanvas == null) {
-                indicatorCanvas = new Canvas(faceBitmap);
-            }
-
-            float piece = (float) (Math.PI * innerOval.width() / 12);
-            float gap = MeasureUtil.PIECES_GAP;
-            if (innerOvalPaint.getPathEffect() == null) {
-                innerOvalPaint.setPathEffect(PathEffectUtil.getDashedStrokeEffect(piece, gap));
-            }
-
-            float ovalRotation = (gap / 2 * 30) / piece;
-
-            indicatorCanvas.save();
-            indicatorCanvas.rotate(ovalRotation, innerOval.centerX(), innerOval.centerY());
-            indicatorCanvas.drawOval(innerOval, innerOvalPaint);
-            indicatorCanvas.restore();
-
-
-            arcRect.set(innerOval.left - innerStrokeSize, innerOval.top - innerStrokeSize,
-                    innerOval.right + innerStrokeSize, innerOval.bottom + innerStrokeSize);
-
-            float startAngle;
-            float angle = 330;
-
-            if (minutes == 0) {
-                startAngle = -60;
-            } else {
-                startAngle = (minutes * 6 / 30) * 30 - 60;
-            }
-            indicatorCanvas.drawArc(arcRect, startAngle, angle, true, innerArcPaint);
         }
 
         @Override
