@@ -7,7 +7,6 @@ import android.graphics.Typeface;
 import android.text.TextPaint;
 
 import java.util.Calendar;
-import java.util.GregorianCalendar;
 import java.util.TimeZone;
 
 public class HourDrawer implements Drawer{
@@ -15,11 +14,11 @@ public class HourDrawer implements Drawer{
     private ColorPalette colorPalette;
     private Paint hourTextPaint;
     private int hourHeight;
-    private Calendar hourCalendar;
+    private HourFormatter hourFormatter;
 
     public HourDrawer(ColorPalette colorPalette, Typeface typeface, float textSize) {
         this.colorPalette = colorPalette;
-        hourCalendar = new GregorianCalendar();
+        hourFormatter = new HourFormatter();
         initHourTextPaint(typeface, textSize);
     }
 
@@ -37,24 +36,13 @@ public class HourDrawer implements Drawer{
 
     public void draw(Canvas canvas, Calendar time, float centerX, float centerY) {
         hourTextPaint.setColor(colorPalette.getHourColor(time.get(Calendar.MINUTE)));
-        canvas.drawText(getHourToDisplay(time), centerX, centerY + hourHeight / 2, hourTextPaint);
+        canvas.drawText(hourFormatter.getHourToDisplay(time), centerX, centerY + hourHeight / 2, hourTextPaint);
     }
 
     public void setTimeZone(TimeZone timeZone){
-        hourCalendar.setTimeZone(timeZone);
+        hourFormatter.setTimeZone(timeZone);
     }
 
-    //TODO test
-    private String getHourToDisplay(Calendar calendar) {
-        hourCalendar.setTimeInMillis(calendar.getTimeInMillis());
-        int hour = hourCalendar.get(Calendar.HOUR_OF_DAY);
-        int minutes = hourCalendar.get(Calendar.MINUTE);
-        if (minutes >= 30) {
-            hourCalendar.add(Calendar.HOUR_OF_DAY, 1);
-            hour = hourCalendar.get(Calendar.HOUR_OF_DAY);
-        }
-        return String.format("%d", hour);
-    }
 
     public void setAmbientMode(boolean ambientModeOn){
         hourTextPaint.setAntiAlias(!ambientModeOn);
