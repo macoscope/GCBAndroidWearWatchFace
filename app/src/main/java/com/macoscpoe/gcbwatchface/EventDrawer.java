@@ -88,7 +88,7 @@ public class EventDrawer implements Drawer{
                      long timeInMillis) {
         drawEventName(canvas, bitmapPaint, radius, eventViewModel.getName(), centerX, centerY);
         canvas.drawText(startsIn, centerX, centerY + startsInHeight, startsInTextPaint);
-        canvas.drawText(eventViewModel.getMinutesToEvent(resources, timeInMillis), centerX, centerY +
+        canvas.drawText(eventViewModel.getMinutesToEventString(resources, timeInMillis), centerX, centerY +
                         startsInHeight + startInMinutesPadding + startInMinutesHeight, minutesTextPaint);
     }
 
