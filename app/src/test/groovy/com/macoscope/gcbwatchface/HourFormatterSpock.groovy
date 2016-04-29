@@ -1,4 +1,4 @@
-package com.macoscpoe.gcbwatchface
+package com.macoscope.gcbwatchface
 
 import spock.lang.Shared
 import spock.lang.Specification

@@ -1,4 +1,4 @@
-package com.macoscpoe.gcbwatchface;
+package com.macoscope.gcbwatchface;
 
 import android.graphics.Bitmap;
 import android.graphics.Canvas;

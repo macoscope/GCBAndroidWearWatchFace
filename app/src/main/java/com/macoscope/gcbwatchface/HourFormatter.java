@@ -1,4 +1,4 @@
-package com.macoscpoe.gcbwatchface;
+package com.macoscope.gcbwatchface;
 
 import java.util.Calendar;
 import java.util.GregorianCalendar;
