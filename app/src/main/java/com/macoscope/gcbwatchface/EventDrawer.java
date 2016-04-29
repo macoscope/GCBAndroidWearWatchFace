@@ -3,6 +3,7 @@ package com.macoscope.gcbwatchface;
 import android.content.Context;
 import android.content.res.Resources;
 import android.graphics.Canvas;
+import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Rect;
 import android.graphics.Typeface;
@@ -13,12 +14,13 @@ import android.view.View;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
-public class EventDrawer implements Drawer{
+public class EventDrawer implements Drawer {
     private static final int MAX_TITLE_LINES = 2;
-
+    private static final int MAX_CALENDAR_NAME_LINES = 1;
     private TextPaint startsInTextPaint;
     private TextPaint minutesTextPaint;
     private TextView eventNameTextView;
+    private TextView eventCalendarTextView;
     private Paint bitmapPaint;
 
     private String startsIn;
@@ -26,6 +28,8 @@ public class EventDrawer implements Drawer{
     private int startsInHeight;
     private int startInMinutesHeight;
     private int startInMinutesPadding;
+
+    private int calendarNameOffset;
 
     private Resources resources;
 
@@ -41,6 +45,10 @@ public class EventDrawer implements Drawer{
                 MeasureUtil.ALL_DIGITS);
         initMinutesTextPaint(typefaceLight, colorPalette, MeasureUtil.getDimensionToPixel(resources,
                 R.dimen.minutes_to_event_font), minutesString);
+        initEventCalendarTextView(context, colorPalette);
+        //XXX must be initialized after paints measurements
+        this.calendarNameOffset = startsInHeight + startInMinutesPadding + startInMinutesHeight + MeasureUtil
+                .getDimensionToPixel(resources, R.dimen.calendar_name_padding);
     }
 
     private void initEventNameTextView(Context context, ColorPalette colorPalette) {
@@ -56,6 +64,20 @@ public class EventDrawer implements Drawer{
         eventNameTextView.setEllipsize(TextUtils.TruncateAt.END);
         eventNameTextView.setTextAlignment(View.TEXT_ALIGNMENT_CENTER);
         eventNameTextView.setGravity(Gravity.BOTTOM);
+    }
+
+    private void initEventCalendarTextView(Context context, ColorPalette colorPalette) {
+        eventCalendarTextView = new TextView(context);
+        eventCalendarTextView.setTypeface(Typeface.DEFAULT);
+        eventCalendarTextView.setTextSize(context.getResources().getDimension(R.dimen.event_calendar_font));
+        eventCalendarTextView.setTextColor(colorPalette.colorWhite);
+        LinearLayout.LayoutParams layoutParams = new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.WRAP_CONTENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT);
+        eventCalendarTextView.setLayoutParams(layoutParams);
+        eventCalendarTextView.setLines(MAX_CALENDAR_NAME_LINES);
+        eventCalendarTextView.setEllipsize(TextUtils.TruncateAt.END);
+        eventCalendarTextView.setTextAlignment(View.TEXT_ALIGNMENT_CENTER);
     }
 
     private void initStartsInTextPaint(ColorPalette colorPalette, float textSize) {
@@ -87,35 +109,57 @@ public class EventDrawer implements Drawer{
     public void draw(EventViewModel eventViewModel, Canvas canvas, float radius, float centerX, float centerY,
                      long timeInMillis) {
         drawEventName(canvas, bitmapPaint, radius, eventViewModel.getName(), centerX, centerY);
+        drawEventCalendarName(canvas, bitmapPaint, radius, eventViewModel.getCalendarName(), centerX, centerY);
         canvas.drawText(startsIn, centerX, centerY + startsInHeight, startsInTextPaint);
         canvas.drawText(eventViewModel.getMinutesToEventString(resources, timeInMillis), centerX, centerY +
-                        startsInHeight + startInMinutesPadding + startInMinutesHeight, minutesTextPaint);
+                startsInHeight + startInMinutesPadding + startInMinutesHeight, minutesTextPaint);
     }
 
     /**
      * Draw event name above inner oval diameter.
-
      */
     private void drawEventName(Canvas canvas, Paint bitmapPaint, float radius, CharSequence eventName,
                                float centerX, float centerY) {
         eventNameTextView.setText(eventName);
         eventNameTextView.setDrawingCacheEnabled(true);
-        eventNameTextView.measure(View.MeasureSpec.makeMeasureSpec(1, View.MeasureSpec.EXACTLY),
-                View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED));
-
-        int measuredHeight = eventNameTextView.getMeasuredHeight();
+        int measuredHeight = measureTextViewHeight(eventNameTextView);
         int desiredWidth = (int) Math.sqrt(Math.pow(radius, 2) - Math.pow(measuredHeight, 2)) * 2;
-        eventNameTextView.measure(View.MeasureSpec.makeMeasureSpec(desiredWidth, View.MeasureSpec.EXACTLY),
-                View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED));
-        eventNameTextView.layout(0, 0, eventNameTextView.getMeasuredWidth(), eventNameTextView.getMeasuredHeight());
+        applyDesiredWidth(eventNameTextView, desiredWidth);
         if (eventNameTextView.getDrawingCache() != null) {
-            canvas.drawBitmap(eventNameTextView.getDrawingCache(), centerX - eventNameTextView.getMeasuredWidth() / 2,
-                    centerY - eventNameTextView.getMeasuredHeight(), bitmapPaint);
+            canvas.drawBitmap(eventNameTextView.getDrawingCache(), centerX - desiredWidth / 2,
+                    centerY - measuredHeight, bitmapPaint);
         }
         eventNameTextView.setDrawingCacheEnabled(false);
     }
 
-    public void setAmbientMode(boolean ambientModeOn){
+    private void drawEventCalendarName(Canvas canvas, Paint bitmapPaint, float radius, CharSequence calendarName,
+                                       float centerX, float centerY) {
+        eventCalendarTextView.setText(calendarName);
+        eventCalendarTextView.setDrawingCacheEnabled(true);
+        int measuredHeight = measureTextViewHeight(eventCalendarTextView);
+        float top = calendarNameOffset + measuredHeight;
+        int desiredWidth = (int) Math.sqrt(radius * radius + top * top);
+        applyDesiredWidth(eventCalendarTextView, desiredWidth);
+        if (eventCalendarTextView.getDrawingCache() != null) {
+            canvas.drawBitmap(eventCalendarTextView.getDrawingCache(), centerX - desiredWidth / 2,
+                    centerY + calendarNameOffset, bitmapPaint);
+        }
+        eventCalendarTextView.setDrawingCacheEnabled(false);
+    }
+
+    private int measureTextViewHeight(TextView textView) {
+        textView.measure(View.MeasureSpec.makeMeasureSpec(1, View.MeasureSpec.EXACTLY),
+                View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED));
+        return textView.getMeasuredHeight();
+    }
+
+    private void applyDesiredWidth(TextView textView, int desiredWidth) {
+        textView.measure(View.MeasureSpec.makeMeasureSpec(desiredWidth, View.MeasureSpec.EXACTLY),
+                View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED));
+        textView.layout(0, 0, textView.getMeasuredWidth(), textView.getMeasuredHeight());
+    }
+
+    public void setAmbientMode(boolean ambientModeOn) {
         startsInTextPaint.setAntiAlias(!ambientModeOn);
         minutesTextPaint.setAntiAlias(!ambientModeOn);
     }

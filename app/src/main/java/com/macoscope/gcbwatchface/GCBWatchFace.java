@@ -44,7 +44,8 @@ public class GCBWatchFace extends CanvasWatchFaceService {
 
     static {
         long eventTime = System.currentTimeMillis() + TimeUnit.MINUTES.toMillis(26);
-        EVENT = new EventViewModel("Lorem ipsum dolor sit amet, consectetur adipiscing elit.", new Date(eventTime), "Warsaw");
+        EVENT = new EventViewModel("Lorem ipsum dolor sit amet, consectetur adipiscing elit.", new Date(eventTime),
+                "KOPERNIK");
     }
 
     @Override
@@ -127,9 +128,9 @@ public class GCBWatchFace extends CanvasWatchFaceService {
             initTime();
             Context context = GCBWatchFace.this.getApplicationContext();
             initResources(context);
-            initDrawers(context);
             initPaints();
             initRectangles();
+            initDrawers(context);
         }
 
         private void initResources(Context context) {

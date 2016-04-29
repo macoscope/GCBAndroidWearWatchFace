@@ -1,13 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <dimen name="analog_hand_stroke">3dp</dimen>
-    <dimen name="hour_text_size">32dp</dimen>
+    <dimen name="hour_text_size">42dp</dimen>
     <dimen name="face_padding">20dp</dimen>
     <dimen name="outside_oval_stroke">4dp</dimen>
     <dimen name="inner_oval_stroke">1dp</dimen>
     <dimen name="ovals_gap">2dp</dimen>
     <dimen name="event_name_font">12dp</dimen>
+    <dimen name="event_calendar_font">6dp</dimen>
     <dimen name="event_starts_in_font">8dp</dimen>
     <dimen name="minutes_to_event_font">12dp</dimen>
     <dimen name="start_in_minutes_padding">4dp</dimen>
+    <dimen name="calendar_name_padding">16dp</dimen>
 </resources>

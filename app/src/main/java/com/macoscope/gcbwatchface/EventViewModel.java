@@ -10,7 +10,7 @@ import java.util.concurrent.TimeUnit;
 public class EventViewModel {
     private String name;
     private Date date;
-    private String place;
+    private String calendarName;
     private Calendar calendar;
 
     public EventViewModel(String name, Date date, String place) {
@@ -18,7 +18,7 @@ public class EventViewModel {
         setName(name);
         setDate(date);
         setCalendarDate(date);
-        setPlace(place);
+        setCalendarName(place);
     }
 
     public String getName() {
@@ -42,12 +42,12 @@ public class EventViewModel {
         calendar.setTime(date);
     }
 
-    public String getPlace() {
-        return place;
+    public String getCalendarName() {
+        return calendarName;
     }
 
-    public void setPlace(String place) {
-        this.place = place;
+    public void setCalendarName(String calendarName) {
+        this.calendarName = calendarName;
     }
 
     public String getMinutesToEventString(Resources resources, long datePointTime) {
