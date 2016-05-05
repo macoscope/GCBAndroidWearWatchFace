@@ -25,4 +25,7 @@
     </string-array>
 
     <string name="pref_title_system_sync_settings">System sync settings</string>
+    <string name="pref_key_sync_frequency">pref_sync_frequency</string>
+    <string name="pref_key_sync_account">pref_sync_account</string>
+    <string name="pref_key_sync_calendar">pref_sync_calendar</string>
 </resources>

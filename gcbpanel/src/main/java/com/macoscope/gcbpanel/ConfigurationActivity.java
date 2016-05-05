@@ -12,7 +12,7 @@ public class ConfigurationActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         // Display the fragment as the main content.
         getFragmentManager().beginTransaction()
-                .replace(android.R.id.content, new DataSyncFragment())
+                .replace(android.R.id.content, new DataSyncPreferenceFragment())
                 .commit();
     }
 }
