@@ -1,7 +1,6 @@
 package com.macoscope.gcbpanel;
 
 import android.os.AsyncTask;
-import android.text.TextUtils;
 
 import com.google.api.client.extensions.android.http.AndroidHttp;
 import com.google.api.client.googleapis.extensions.android.gms.auth.GoogleAccountCredential;
