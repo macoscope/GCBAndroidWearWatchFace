@@ -5,9 +5,13 @@ import android.accounts.AccountManager;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.preference.ListPreference;
 import android.preference.Preference;
 import android.preference.PreferenceManager;
+import android.text.TextUtils;
+import android.util.Pair;
 
+import com.eccyan.optional.Optional;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GoogleApiAvailability;
 import com.google.api.client.googleapis.extensions.android.gms.auth.GoogleAccountCredential;
@@ -18,6 +22,11 @@ import java.util.Arrays;
 
 import pub.devrel.easypermissions.AfterPermissionGranted;
 import pub.devrel.easypermissions.EasyPermissions;
+import rx.Subscription;
+import rx.android.schedulers.AndroidSchedulers;
+import rx.functions.Action1;
+import rx.schedulers.Schedulers;
+import rx.subscriptions.CompositeSubscription;
 
 import static android.app.Activity.RESULT_OK;
 
@@ -27,20 +36,92 @@ public class SyncPreferencesPresenter {
     static final int REQUEST_GOOGLE_PLAY_SERVICES = 1002;
     static final int REQUEST_PERMISSION_GET_ACCOUNTS = 1003;
 
-
-    static final String[] SCOPES = {CalendarScopes.CALENDAR_READONLY};
+    private static final String[] SCOPES = {CalendarScopes.CALENDAR_READONLY};
+    private static final CharSequence[] EMPTY_CHARS_ARRAY = new CharSequence[]{};
 
     private SyncPreferencesView syncPreferencesView;
     private GoogleAccountCredential googleAccountCredential;
     private Context context;
     private Preference accountPreference;
+    private ListPreference calendarListPreference;
+    private ListPreference syncFrequencyPreference;
+    private CalendarUseCase calendarUseCase;
+    //TODO handle unsubscribe
+    private CompositeSubscription compositeSubscription;
 
-    public SyncPreferencesPresenter(SyncPreferencesView syncPreferencesView, Context context, Preference accountPreference) {
+    /**
+     * A preference value change listener that updates the preference's summary
+     * to reflect its new value.
+     */
+    private Preference.OnPreferenceChangeListener bindPreferenceSummaryToValueListener =
+            new Preference.OnPreferenceChangeListener() {
+                @Override
+                public boolean onPreferenceChange(Preference preference, Object value) {
+                    String stringValue = value.toString();
+
+                    if (preference instanceof ListPreference) {
+                        // For list preferences, look up the correct display value in
+                        // the preference's 'entries' list.
+                        ListPreference listPreference = (ListPreference) preference;
+                        int index = listPreference.findIndexOfValue(stringValue);
+
+                        // Set the summary to reflect the new value.
+                        preference.setSummary(
+                                index >= 0
+                                        ? listPreference.getEntries()[index]
+                                        : null);
+
+
+                    } else {
+                        // For all other preferences, set the summary to the value's
+                        // simple string representation.
+                        preference.setSummary(stringValue);
+                    }
+                    return true;
+                }
+            };
+
+    public SyncPreferencesPresenter(SyncPreferencesView syncPreferencesView, Context context,
+                                    ListPreference syncFrequencyPreference, Preference accountPreference,
+                                    ListPreference calendarListPreference) {
         this.syncPreferencesView = syncPreferencesView;
         this.context = context;
         this.accountPreference = accountPreference;
+        this.calendarListPreference = calendarListPreference;
+        this.syncFrequencyPreference = syncFrequencyPreference;
+        setBindPreferenceSummariesToValues();
+        compositeSubscription = new CompositeSubscription();
         initCredentials();
+        initCalendarUseCase();
+        loadAvailableCalendarIds();
         setAccountPreferenceClickListener(accountPreference);
+    }
+
+    private void setBindPreferenceSummariesToValues() {
+        bindPreferenceSummaryToValue(syncFrequencyPreference);
+        bindPreferenceSummaryToValue(accountPreference);
+        bindPreferenceSummaryToValue(calendarListPreference);
+    }
+
+    /**
+     * Binds a preference's summary to its value. More specifically, when the
+     * preference's value is changed, its summary (line of text below the
+     * preference title) is updated to reflect the value. The summary is also
+     * immediately updated upon calling this method. The exact display format is
+     * dependent on the type of preference.
+     *
+     * @see #bindPreferenceSummaryToValueListener
+     */
+    private void bindPreferenceSummaryToValue(Preference preference) {
+        // Set the listener to watch for value changes.
+        preference.setOnPreferenceChangeListener(bindPreferenceSummaryToValueListener);
+
+        // Trigger the listener immediately with the preference's
+        // current value.
+        bindPreferenceSummaryToValueListener.onPreferenceChange(preference,
+                PreferenceManager
+                        .getDefaultSharedPreferences(preference.getContext())
+                        .getString(preference.getKey(), ""));
     }
 
     private void chooseAccountIfGooglePlayServicesAvailable() {
@@ -51,7 +132,7 @@ public class SyncPreferencesPresenter {
         }
     }
 
-    private void setAccountPreferenceClickListener(Preference accountPreference){
+    private void setAccountPreferenceClickListener(Preference accountPreference) {
         accountPreference.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
             @Override
             public boolean onPreferenceClick(Preference preference) {
@@ -71,6 +152,11 @@ public class SyncPreferencesPresenter {
             googleAccountCredential.setSelectedAccountName(accountName);
         }
     }
+
+    private void initCalendarUseCase() {
+        calendarUseCase = new CalendarUseCase(googleAccountCredential);
+    }
+
 
     /**
      * Check that Google Play services APK is installed and up to date.
@@ -115,10 +201,9 @@ public class SyncPreferencesPresenter {
                     googleAccountCredential.newChooseAccountIntent(),
                     REQUEST_ACCOUNT_PICKER);
         } else {
-            // Request the GET_ACCOUNTS permission via a user dialog
             EasyPermissions.requestPermissions(
                     context,
-                    "This app needs to access your Google account.",
+                    context.getString(R.string.account_permissions),
                     REQUEST_PERMISSION_GET_ACCOUNTS,
                     Manifest.permission.GET_ACCOUNTS);
         }
@@ -129,9 +214,7 @@ public class SyncPreferencesPresenter {
         switch (requestCode) {
             case REQUEST_GOOGLE_PLAY_SERVICES:
                 if (resultCode != RESULT_OK) {
-                    syncPreferencesView.showMessage(
-                            "This app requires Google Play Services. Please install " +
-                                    "Google Play Services on your device and relaunch this app.");
+                    syncPreferencesView.showMessage(R.string.error_missing_play_services);
                 } else {
                     chooseAccount();
                 }
@@ -148,6 +231,7 @@ public class SyncPreferencesPresenter {
                         editor.commit();
                         accountPreference.setSummary(accountName);
                         googleAccountCredential.setSelectedAccountName(accountName);
+                        loadAvailableCalendarIds();
                     }
                 }
                 break;
@@ -157,5 +241,56 @@ public class SyncPreferencesPresenter {
 //                }
 //                break;
         }
+    }
+
+    private void loadAvailableCalendarIds() {
+        if (!TextUtils.isEmpty(googleAccountCredential.getSelectedAccountName())) {
+            Subscription subscription = calendarUseCase.getPreferenceListCalendarsArrays().subscribeOn(Schedulers.io()).observeOn
+                    (AndroidSchedulers
+                            .mainThread())
+                    .subscribe(new Action1<Optional<Pair<CharSequence[], CharSequence[]>>>() {
+                        @Override
+                        public void call(Optional<Pair<CharSequence[], CharSequence[]>> pairOptional) {
+                            if (pairOptional.isPresent()) {
+                                Pair<CharSequence[], CharSequence[]> entryValuePair = pairOptional.get();
+                                setCalendarsPreference(entryValuePair.first, entryValuePair.second);
+                                enableCalendarsList(true);
+                            } else {
+                                syncPreferencesView.showMessage(R.string.error_zero_calendars);
+                                clearCalendarsPreference();
+                                enableCalendarsList(false);
+                            }
+                        }
+                    }, new Action1<Throwable>() {
+                        @Override
+                        public void call(Throwable throwable) {
+                            syncPreferencesView.showMessage(R.string.error_load_calendars);
+                            clearCalendarsPreference();
+                            enableCalendarsList(false);
+                        }
+                    });
+            compositeSubscription.add(subscription);
+        } else {
+            calendarListPreference.setEnabled(false);
+        }
+    }
+
+    private void enableCalendarsList(boolean enable) {
+        calendarListPreference.setEnabled(enable);
+        calendarListPreference.setSelectable(enable);
+    }
+
+    private void clearCalendarsPreference() {
+        setCalendarsPreference(EMPTY_CHARS_ARRAY, EMPTY_CHARS_ARRAY);
+        SharedPreferences.Editor editor = PreferenceManager.getDefaultSharedPreferences(calendarListPreference
+                .getContext())
+                .edit();
+        editor.remove(calendarListPreference.getKey()).commit();
+    }
+
+    private void setCalendarsPreference(CharSequence[] entries, CharSequence[] values) {
+        calendarListPreference.setSummary(R.string.no_calendar_selected);
+        calendarListPreference.setEntries(entries);
+        calendarListPreference.setEntryValues(values);
     }
 }

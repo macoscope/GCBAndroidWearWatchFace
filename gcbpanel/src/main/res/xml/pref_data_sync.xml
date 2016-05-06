@@ -12,14 +12,20 @@
         android:positiveButtonText="@null"
         android:title="@string/pref_title_sync_frequency"/>
 
+    <Preference
+        android:key="@string/pref_key_sync_account"
+        android:title="Sync account"/>
+
+    <ListPreference
+        android:key="@string/pref_key_sync_calendar"
+        android:negativeButtonText="@null"
+        android:positiveButtonText="@null"
+        android:title="@string/pref_title_calendar"/>
+
     <!-- This preference simply launches an intent when selected. Use this UI sparingly, per
-         design guidelines. -->
+     design guidelines. -->
     <Preference android:title="TEST">
         <intent
             android:action="com.macoscope.gcbpanel.action.calendar.test"/>
     </Preference>
-
-    <Preference
-        android:key="@string/pref_key_sync_account"
-        android:title="Sync account"/>
 </PreferenceScreen>
