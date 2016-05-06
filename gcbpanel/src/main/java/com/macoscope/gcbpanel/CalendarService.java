@@ -9,14 +9,12 @@ import com.google.api.client.json.jackson2.JacksonFactory;
 import com.google.api.client.util.DateTime;
 import com.google.api.services.calendar.Calendar;
 import com.google.api.services.calendar.model.CalendarList;
-import com.google.api.services.calendar.model.CalendarListEntry;
-import com.google.api.services.calendar.model.Event;
 import com.google.api.services.calendar.model.Events;
 
 import java.io.IOException;
-import java.util.List;
 
 public class CalendarService {
+    private static final String DEFAULT_ORDER_BY = "startTime";
     private Calendar calendarService;
 
     public CalendarService(GoogleAccountCredential credential) {
@@ -31,34 +29,22 @@ public class CalendarService {
     /**
      * Fetch a list of the next events from the specific calendar.
      */
-    private Optional<List<CalendarListEntry>> getCalendars() {
-        CalendarList events;
-        try {
-            events = calendarService.calendarList().list().execute();
-        } catch (IOException exception) {
-            exception.printStackTrace();
-            return Optional.empty();
-        }
-        return Optional.of(events.getItems());
+    public Optional<CalendarList> getCalendars() throws IOException {
+        CalendarList calendarList = calendarService.calendarList().list().execute();
+        return Optional.of(calendarList);
     }
 
     /**
      * Fetch a list of the next events from the specific calendar.
      */
-    private Optional<List<Event>> getEvents(String calendarId, int maxResults) {
+    public Optional<Events> getEvents(String calendarId, int maxResults) throws IOException {
         DateTime now = new DateTime(System.currentTimeMillis());
-        Events events;
-        try {
-            events = calendarService.events().list(calendarId)
-                    .setMaxResults(maxResults)
-                    .setTimeMin(now)
-                    .setOrderBy("startTime")
-                    .setSingleEvents(true)
-                    .execute();
-        } catch (IOException exception) {
-            exception.printStackTrace();
-            return Optional.empty();
-        }
-        return Optional.of(events.getItems());
+        Events events = calendarService.events().list(calendarId)
+                .setMaxResults(maxResults)
+                .setTimeMin(now)
+                .setOrderBy(DEFAULT_ORDER_BY)
+                .setSingleEvents(true)
+                .execute();
+        return Optional.of(events);
     }
 }
