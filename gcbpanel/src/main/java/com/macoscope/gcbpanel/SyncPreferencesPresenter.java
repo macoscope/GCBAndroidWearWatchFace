@@ -17,8 +17,10 @@ import com.google.android.gms.common.GoogleApiAvailability;
 import com.google.api.client.googleapis.extensions.android.gms.auth.GoogleAccountCredential;
 import com.google.api.client.util.ExponentialBackOff;
 import com.google.api.services.calendar.CalendarScopes;
+import com.google.api.services.calendar.model.Event;
 
 import java.util.Arrays;
+import java.util.List;
 
 import pub.devrel.easypermissions.AfterPermissionGranted;
 import pub.devrel.easypermissions.EasyPermissions;
@@ -90,7 +92,28 @@ public class SyncPreferencesPresenter {
         this.calendarListPreference = calendarListPreference;
         this.syncFrequencyPreference = syncFrequencyPreference;
         this.compositeSubscription = new CompositeSubscription();
+
         setBindPreferenceSummariesToValues();
+        calendarListPreference.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
+            @Override
+            public boolean onPreferenceChange(Preference preference, Object newValue) {
+                String stringValue = newValue.toString();
+
+                // For list preferences, look up the correct display value in
+                // the preference's 'entries' list.
+                ListPreference listPreference = (ListPreference) preference;
+                int index = listPreference.findIndexOfValue(stringValue);
+
+                // Set the summary to reflect the new value.
+                preference.setSummary(
+                        index >= 0
+                                ? listPreference.getEntries()[index]
+                                : null);
+
+                loadEvents(stringValue);
+                return true;
+            }
+        });
         initCredentials();
         initCalendarUseCase();
         loadAvailableCalendarIds();
@@ -100,7 +123,7 @@ public class SyncPreferencesPresenter {
     private void setBindPreferenceSummariesToValues() {
         bindPreferenceSummaryToValue(syncFrequencyPreference);
         bindPreferenceSummaryToValue(accountPreference);
-        bindPreferenceSummaryToValue(calendarListPreference);
+//        bindPreferenceSummaryToValue(calendarListPreference);
     }
 
     /**
@@ -302,5 +325,28 @@ public class SyncPreferencesPresenter {
         calendarListPreference.setSummary(R.string.no_calendar_selected);
         calendarListPreference.setEntries(entries);
         calendarListPreference.setEntryValues(values);
+    }
+
+
+    private void loadEvents(String calendarId) {
+        if (!TextUtils.isEmpty(googleAccountCredential.getSelectedAccountName())) {
+            Subscription subscription = calendarUseCase.getEvents(calendarId, 100).subscribeOn(Schedulers.io())
+                    .observeOn(AndroidSchedulers.mainThread()).subscribe(new Action1<Optional<List<Event>>>() {
+                        @Override
+                        public void call(Optional<List<Event>> listOptional) {
+                            if (listOptional.isPresent()) {
+                                List<Event> events = listOptional.get();
+                                String string = "Events:\n";
+                                for (int i = 0; i < events.size(); i++) {
+                                    string += events.get(i).getSummary() + '\n';
+                                }
+                                syncPreferencesView.showMessage(string);
+                            } else {
+                                syncPreferencesView.showMessage("No events");
+                            }
+                        }
+                    });
+            compositeSubscription.add(subscription);
+        }
     }
 }
