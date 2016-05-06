@@ -14,6 +14,7 @@ import com.google.api.services.calendar.model.Events;
 import java.io.IOException;
 
 public class CalendarService {
+    private static final String APPLICATION_NAME = "GCB watch face";
     private static final String DEFAULT_ORDER_BY = "startTime";
     private Calendar calendarService;
 
@@ -22,7 +23,7 @@ public class CalendarService {
         JsonFactory jsonFactory = JacksonFactory.getDefaultInstance();
         calendarService = new Calendar.Builder(
                 transport, jsonFactory, credential)
-                .setApplicationName("GCB watch face")
+                .setApplicationName(APPLICATION_NAME)
                 .build();
     }
 

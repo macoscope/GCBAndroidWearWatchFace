@@ -89,8 +89,8 @@ public class SyncPreferencesPresenter {
         this.accountPreference = accountPreference;
         this.calendarListPreference = calendarListPreference;
         this.syncFrequencyPreference = syncFrequencyPreference;
+        this.compositeSubscription = new CompositeSubscription();
         setBindPreferenceSummariesToValues();
-        compositeSubscription = new CompositeSubscription();
         initCredentials();
         initCalendarUseCase();
         loadAvailableCalendarIds();
@@ -244,35 +244,45 @@ public class SyncPreferencesPresenter {
     }
 
     private void loadAvailableCalendarIds() {
+        enableCalendarsList(false);
         if (!TextUtils.isEmpty(googleAccountCredential.getSelectedAccountName())) {
-            Subscription subscription = calendarUseCase.getPreferenceListCalendarsArrays().subscribeOn(Schedulers.io()).observeOn
-                    (AndroidSchedulers
-                            .mainThread())
+            Subscription subscription = calendarUseCase.getPreferenceListCalendarsArrays().subscribeOn(Schedulers.io())
+                    .observeOn(AndroidSchedulers.mainThread())
                     .subscribe(new Action1<Optional<Pair<CharSequence[], CharSequence[]>>>() {
                         @Override
                         public void call(Optional<Pair<CharSequence[], CharSequence[]>> pairOptional) {
                             if (pairOptional.isPresent()) {
-                                Pair<CharSequence[], CharSequence[]> entryValuePair = pairOptional.get();
-                                setCalendarsPreference(entryValuePair.first, entryValuePair.second);
-                                enableCalendarsList(true);
+                                bindCalendarsToPreferenceList(pairOptional.get());
                             } else {
-                                syncPreferencesView.showMessage(R.string.error_zero_calendars);
-                                clearCalendarsPreference();
-                                enableCalendarsList(false);
+                                handleNoCalendarForAccount();
                             }
                         }
                     }, new Action1<Throwable>() {
                         @Override
                         public void call(Throwable throwable) {
-                            syncPreferencesView.showMessage(R.string.error_load_calendars);
-                            clearCalendarsPreference();
-                            enableCalendarsList(false);
+                            throwable.printStackTrace();
+                            handleFetchCalendarsError();
                         }
                     });
             compositeSubscription.add(subscription);
         } else {
-            calendarListPreference.setEnabled(false);
+            clearCalendarsPreference();
         }
+    }
+
+    private void bindCalendarsToPreferenceList(Pair<CharSequence[], CharSequence[]> entryValuePair) {
+        setCalendarsPreference(entryValuePair.first, entryValuePair.second);
+        enableCalendarsList(true);
+    }
+
+    private void handleNoCalendarForAccount() {
+        syncPreferencesView.showMessage(R.string.error_zero_calendars);
+        clearCalendarsPreference();
+    }
+
+    private void handleFetchCalendarsError() {
+        syncPreferencesView.showMessage(R.string.error_load_calendars);
+        clearCalendarsPreference();
     }
 
     private void enableCalendarsList(boolean enable) {

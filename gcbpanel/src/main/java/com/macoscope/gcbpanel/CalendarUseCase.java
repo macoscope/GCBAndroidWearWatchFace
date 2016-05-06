@@ -19,6 +19,18 @@ public class CalendarUseCase {
 
     private CalendarService calendarService;
 
+    private Func1 calendarsListToPreferenceArraysMapFunction =
+            new Func1<Optional<List<CalendarListEntry>>, Optional<Pair<CharSequence[], CharSequence[]>>>() {
+                @Override
+                public Optional<Pair<CharSequence[], CharSequence[]>> call(Optional<List<CalendarListEntry>> listOptional) {
+                    if (listOptional.isPresent() && !listOptional.get().isEmpty()) {
+                        return getPreferenceListEntryValueArraysPair(listOptional.get());
+                    } else {
+                        return Optional.empty();
+                    }
+                }
+            };
+
     public CalendarUseCase(GoogleAccountCredential googleAccountCredential) {
         setCredentials(googleAccountCredential);
     }
@@ -44,24 +56,18 @@ public class CalendarUseCase {
     }
 
     public Observable<Optional<Pair<CharSequence[], CharSequence[]>>> getPreferenceListCalendarsArrays() {
-        return getCalendars().map(new Func1<Optional<List<CalendarListEntry>>, Optional<Pair<CharSequence[], CharSequence[]>>>() {
-            @Override
-            public Optional<Pair<CharSequence[], CharSequence[]>> call(Optional<List<CalendarListEntry>> listOptional) {
-                if (listOptional.isPresent() && !listOptional.get().isEmpty()) {
-                    List<CalendarListEntry> calendarEntries = listOptional.get();
-                    int size = calendarEntries.size();
-                    CharSequence[] entries = new CharSequence[size];
-                    CharSequence[] values = new CharSequence[size];
-                    for (int i = 0; i < calendarEntries.size(); i++) {
-                        entries[i] = calendarEntries.get(i).getSummary();
-                        values[i] = calendarEntries.get(i).getId();
-                    }
-                    return Optional.of(new Pair<>(entries, values));
-                } else {
-                    return Optional.empty();
-                }
-            }
-        });
+        return getCalendars().map(calendarsListToPreferenceArraysMapFunction);
+    }
+
+    private Optional<Pair<CharSequence[], CharSequence[]>> getPreferenceListEntryValueArraysPair(List<CalendarListEntry> calendarEntries) {
+        int size = calendarEntries.size();
+        CharSequence[] entries = new CharSequence[size];
+        CharSequence[] values = new CharSequence[size];
+        for (int i = 0; i < calendarEntries.size(); i++) {
+            entries[i] = calendarEntries.get(i).getSummary();
+            values[i] = calendarEntries.get(i).getId();
+        }
+        return Optional.of(new Pair<>(entries, values));
     }
 
     public Observable<Optional<List<Event>>> getEvents(final String calendarId, final int maxResults) {
