@@ -20,6 +20,7 @@ import java.util.List;
 /**
  * An asynchronous task that handles the Google Calendar API call.
  * Placing the API calls in their own task ensures the UI stays responsive.
+ * TODO remove before publishing
  */
 class MakeRequestTask extends AsyncTask<Void, Void, List<String>> {
     private CalendarActivity calendarActivity;

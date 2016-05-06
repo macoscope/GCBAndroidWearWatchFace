@@ -11,11 +11,9 @@ import android.view.View;
 
 import com.google.android.gms.common.GoogleApiAvailability;
 
-
 public class DataSyncPreferenceFragment extends PreferenceFragment implements SyncPreferencesView {
 
     private SyncPreferencesPresenter syncPreferencesPresenter;
-
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
