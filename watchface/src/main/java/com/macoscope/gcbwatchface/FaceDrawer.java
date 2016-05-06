@@ -7,6 +7,7 @@ import android.graphics.PorterDuff;
 import android.graphics.PorterDuffXfermode;
 import android.graphics.RectF;
 import android.graphics.SweepGradient;
+import android.support.annotation.VisibleForTesting;
 
 public class FaceDrawer implements Drawer{
     /**
@@ -73,17 +74,21 @@ public class FaceDrawer implements Drawer{
         faceCanvas.rotate(ovalRotation, centerX, centerY);
         faceCanvas.drawOval(oval, gradientPaint);
         faceCanvas.restore();
-        int angle;
-        if (minutes >= 30) {
-            angle = (minutes * 6 / 30) * 30;
-        } else if (minutes == 0) {
-            angle = -330;
-        } else {
-            angle = -((59 - minutes) * 6 / 30) * 30;
-        }
+
         arcRect.set(oval.left - padding, oval.top - padding, oval.right + padding, oval.bottom
                 + padding);
-        faceCanvas.drawArc(arcRect, -90, angle, true, arcPaint);
+        faceCanvas.drawArc(arcRect, -90, getSwapAngle(minutes), true, arcPaint);
+    }
+    //TODO Test it
+    @VisibleForTesting
+    private int getSwapAngle(int minutes){
+        if (minutes >= 30) {
+            return (minutes * 6 / 30) * 30;
+        } else if (minutes == 0) {
+            return  -330;
+        } else {
+            return  -((59 - minutes) * 6 / 30) * 30;
+        }
     }
 
     public void setAmbientMode(boolean ambientModeOn){

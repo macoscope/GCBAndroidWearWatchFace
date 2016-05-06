@@ -7,9 +7,10 @@ import android.graphics.Paint;
 import android.graphics.PorterDuff;
 import android.graphics.PorterDuffXfermode;
 import android.graphics.RectF;
+import android.support.annotation.VisibleForTesting;
 
-public class EventIndicatorDrawer implements Drawer{
-
+public class EventIndicatorDrawer implements Drawer {
+    private static final float ARC_MASK_SWAP_ANGLE = 330;
     private Paint innerOvalPaint;
     private Paint innerArcPaint;
     private Canvas indicatorCanvas;
@@ -39,7 +40,7 @@ public class EventIndicatorDrawer implements Drawer{
         innerArcPaint.setColor(Color.TRANSPARENT);
     }
 
-    public void draw(Bitmap faceBitmap,  int minutes, RectF oval, RectF innerOval, RectF arcRect) {
+    public void draw(Bitmap faceBitmap, int minutes, RectF oval, RectF innerOval, RectF arcRect) {
 
         innerOval.set(oval.left + ovalsPadding, oval.top + ovalsPadding, oval.right - ovalsPadding,
                 oval.bottom - ovalsPadding);
@@ -61,19 +62,16 @@ public class EventIndicatorDrawer implements Drawer{
         indicatorCanvas.drawOval(innerOval, innerOvalPaint);
         indicatorCanvas.restore();
 
-
         arcRect.set(innerOval.left - innerStrokeSize, innerOval.top - innerStrokeSize,
                 innerOval.right + innerStrokeSize, innerOval.bottom + innerStrokeSize);
 
-        float startAngle;
-        float angle = 330;
+        indicatorCanvas.drawArc(arcRect, getStartAngle(minutes), ARC_MASK_SWAP_ANGLE, true, innerArcPaint);
+    }
 
-        if (minutes == 0) {
-            startAngle = -60;
-        } else {
-            startAngle = (minutes * 6 / 30) * 30 - 60;
-        }
-        indicatorCanvas.drawArc(arcRect, startAngle, angle, true, innerArcPaint);
+    //TODO Test it
+    @VisibleForTesting
+    private float getStartAngle(int minutes) {
+        return minutes == 0 ? -60 : (minutes * 6 / 30) * 30 - 60;
     }
 
     public void setAmbientMode(boolean ambientModeOn) {
