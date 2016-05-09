@@ -336,13 +336,10 @@ public class SyncPreferencesPresenter {
                         public void call(Optional<List<Event>> listOptional) {
                             if (listOptional.isPresent()) {
                                 List<Event> events = listOptional.get();
-                                String string = "Events:\n";
-                                for (int i = 0; i < events.size(); i++) {
-                                    string += events.get(i).getSummary() + '\n';
-                                }
+                                String string = "Events:\n size: "+events.size();
                                 syncPreferencesView.showMessage(string);
                             } else {
-                                syncPreferencesView.showMessage("No events");
+                                syncPreferencesView.showMessage("Can not load events");
                             }
                         }
                     });

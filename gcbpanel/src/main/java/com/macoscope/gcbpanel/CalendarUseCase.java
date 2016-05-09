@@ -12,7 +12,7 @@ import com.google.api.services.calendar.model.Events;
 import java.util.List;
 
 import rx.Observable;
-import rx.Subscriber;
+import rx.functions.Func0;
 import rx.functions.Func1;
 
 public class CalendarUseCase {
@@ -40,17 +40,18 @@ public class CalendarUseCase {
     }
 
     public Observable<Optional<List<CalendarListEntry>>> getCalendars() {
-        return Observable.create(new Observable.OnSubscribe<Optional<List<CalendarListEntry>>>() {
+        return Observable.defer(new Func0<Observable<Optional<List<CalendarListEntry>>>>() {
             @Override
-            public void call(Subscriber<? super Optional<List<CalendarListEntry>>> subscriber) {
+            public Observable<Optional<List<CalendarListEntry>>> call() {
                 try {
                     Optional<CalendarList> calendarList = calendarApiService.getCalendars();
                     if (calendarList.isPresent()) {
-                        subscriber.onNext(Optional.of(calendarList.get().getItems()));
+                        return Observable.just(Optional.of(calendarList.get().getItems()));
                     }
                 } catch (Exception error) {
-                    subscriber.onError(error);
+                    return Observable.error(error);
                 }
+                return Observable.just(Optional.<List<CalendarListEntry>>empty());
             }
         });
     }
@@ -71,19 +72,21 @@ public class CalendarUseCase {
     }
 
     public Observable<Optional<List<Event>>> getEvents(final String calendarId, final int maxResults) {
-        return Observable.create(new Observable.OnSubscribe<Optional<List<Event>>>() {
+        return Observable.defer(new Func0<Observable<Optional<List<Event>>>>() {
             @Override
-            public void call(Subscriber<? super Optional<List<Event>>> subscriber) {
+            public Observable<Optional<List<Event>>> call() {
                 try {
                     Optional<Events> calendarList = calendarApiService.getEvents(calendarId, maxResults);
                     if (calendarList.isPresent()) {
-                        subscriber.onNext(Optional.of(calendarList.get().getItems()));
+                        return Observable.just(Optional.of(calendarList.get().getItems()));
                     }
                 } catch (Exception error) {
-                    subscriber.onError(error);
+                    return Observable.error(error);
                 }
+                return Observable.just(Optional.<List<Event>>empty());
             }
         });
+
     }
 
 }
