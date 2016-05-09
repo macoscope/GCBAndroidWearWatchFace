@@ -17,7 +17,7 @@ import rx.functions.Func1;
 
 public class CalendarUseCase {
 
-    private CalendarService calendarService;
+    private CalendarApiService calendarApiService;
 
     private Func1 calendarsListToPreferenceArraysMapFunction =
             new Func1<Optional<List<CalendarListEntry>>, Optional<Pair<CharSequence[], CharSequence[]>>>() {
@@ -36,7 +36,7 @@ public class CalendarUseCase {
     }
 
     public void setCredentials(GoogleAccountCredential googleAccountCredential) {
-        calendarService = new CalendarService(googleAccountCredential);
+        calendarApiService = new CalendarApiService(googleAccountCredential);
     }
 
     public Observable<Optional<List<CalendarListEntry>>> getCalendars() {
@@ -44,7 +44,7 @@ public class CalendarUseCase {
             @Override
             public void call(Subscriber<? super Optional<List<CalendarListEntry>>> subscriber) {
                 try {
-                    Optional<CalendarList> calendarList = calendarService.getCalendars();
+                    Optional<CalendarList> calendarList = calendarApiService.getCalendars();
                     if (calendarList.isPresent()) {
                         subscriber.onNext(Optional.of(calendarList.get().getItems()));
                     }
@@ -75,7 +75,7 @@ public class CalendarUseCase {
             @Override
             public void call(Subscriber<? super Optional<List<Event>>> subscriber) {
                 try {
-                    Optional<Events> calendarList = calendarService.getEvents(calendarId, maxResults);
+                    Optional<Events> calendarList = calendarApiService.getEvents(calendarId, maxResults);
                     if (calendarList.isPresent()) {
                         subscriber.onNext(Optional.of(calendarList.get().getItems()));
                     }

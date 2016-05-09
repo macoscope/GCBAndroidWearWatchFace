@@ -13,12 +13,12 @@ import com.google.api.services.calendar.model.Events;
 
 import java.io.IOException;
 
-public class CalendarService {
+public class CalendarApiService {
     private static final String APPLICATION_NAME = "GCB watch face";
     private static final String DEFAULT_ORDER_BY = "startTime";
     private Calendar calendarService;
 
-    public CalendarService(GoogleAccountCredential credential) {
+    public CalendarApiService(GoogleAccountCredential credential) {
         HttpTransport transport = AndroidHttp.newCompatibleTransport();
         JsonFactory jsonFactory = JacksonFactory.getDefaultInstance();
         calendarService = new Calendar.Builder(
@@ -28,7 +28,7 @@ public class CalendarService {
     }
 
     /**
-     * Fetch a list of the next events from the specific calendar.
+     * Fetch a list of calendars for given user.
      */
     public Optional<CalendarList> getCalendars() throws IOException {
         CalendarList calendarList = calendarService.calendarList().list().execute();
