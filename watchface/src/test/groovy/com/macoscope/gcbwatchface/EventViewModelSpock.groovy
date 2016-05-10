@@ -10,7 +10,7 @@ class EventViewModelSpock extends Specification {
             int minutes = 25
             long timeOffset = 1000 * 60 * minutes
             Date date = new Date(now + timeOffset);
-            EventViewModel objectUnderTest = new EventViewModel("Event Name", date, "Room 1")
+            EventFormatter objectUnderTest = new EventFormatter("Event Name", date, "Room 1")
         when:
             long offset = objectUnderTest.getMinutesToEvent(now)
         then:
@@ -20,7 +20,7 @@ class EventViewModelSpock extends Specification {
     def "EventViewModel.getHourMinutes() should return proper minutes amount for defined event date"() {
         given:
             Date date = new Date("Tue, 22 Jun 1999 12:16:00 GMT-0500")
-            EventViewModel objectUnderTest = new EventViewModel("Event Name", date, "Room 1")
+            EventFormatter objectUnderTest = new EventFormatter("Event Name", date, "Room 1")
         when:
             int minutes = objectUnderTest.getHourMinutes()
         then:

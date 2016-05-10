@@ -12,4 +12,5 @@
     <dimen name="minutes_to_event_font">12dp</dimen>
     <dimen name="start_in_minutes_padding">4dp</dimen>
     <dimen name="calendar_name_padding">16dp</dimen>
+    <dimen name="permissions_not_granted">12dp</dimen>
 </resources>

@@ -17,10 +17,8 @@ import com.google.android.gms.common.GoogleApiAvailability;
 import com.google.api.client.googleapis.extensions.android.gms.auth.GoogleAccountCredential;
 import com.google.api.client.util.ExponentialBackOff;
 import com.google.api.services.calendar.CalendarScopes;
-import com.google.api.services.calendar.model.Event;
 
 import java.util.Arrays;
-import java.util.List;
 
 import pub.devrel.easypermissions.AfterPermissionGranted;
 import pub.devrel.easypermissions.EasyPermissions;
@@ -109,8 +107,6 @@ public class SyncPreferencesPresenter {
                         index >= 0
                                 ? listPreference.getEntries()[index]
                                 : null);
-
-                loadEvents(stringValue);
                 return true;
             }
         });
@@ -327,23 +323,4 @@ public class SyncPreferencesPresenter {
         calendarListPreference.setEntryValues(values);
     }
 
-
-    private void loadEvents(String calendarId) {
-        if (!TextUtils.isEmpty(googleAccountCredential.getSelectedAccountName())) {
-            Subscription subscription = calendarUseCase.getEvents(calendarId, 100).subscribeOn(Schedulers.io())
-                    .observeOn(AndroidSchedulers.mainThread()).subscribe(new Action1<Optional<List<Event>>>() {
-                        @Override
-                        public void call(Optional<List<Event>> listOptional) {
-                            if (listOptional.isPresent()) {
-                                List<Event> events = listOptional.get();
-                                String string = "Events:\n size: "+events.size();
-                                syncPreferencesView.showMessage(string);
-                            } else {
-                                syncPreferencesView.showMessage("Can not load events");
-                            }
-                        }
-                    });
-            compositeSubscription.add(subscription);
-        }
-    }
 }
