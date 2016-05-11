@@ -1,17 +1,12 @@
 package com.macoscope.gcbpanel;
 
 import android.content.ContentResolver;
-import android.graphics.Path;
 import android.util.Pair;
 
 import com.eccyan.optional.Optional;
-import com.google.api.client.googleapis.extensions.android.gms.auth.GoogleAccountCredential;
-import com.google.api.services.calendar.model.CalendarList;
-import com.google.api.services.calendar.model.CalendarListEntry;
-import com.google.api.services.calendar.model.Event;
-import com.google.api.services.calendar.model.Events;
 
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 import rx.Observable;
 import rx.functions.Func0;
@@ -58,8 +53,6 @@ public class CalendarUseCase {
         return getCalendars(account).map(calendarsListToPreferenceArraysMapFunction);
     }
 
-
-
     private Optional<Pair<CharSequence[], CharSequence[]>> getPreferenceListEntryValueArraysPair(List<CalendarModel>
                                                                                                          calendarEntries) {
         int size = calendarEntries.size();
@@ -73,4 +66,20 @@ public class CalendarUseCase {
         return Optional.of(new Pair<>(entries, values));
     }
 
+    public Observable<Optional<List<Event>>> getEvents(final long calendarId, final long minutes){
+        return Observable.defer(new Func0<Observable<Optional<List<Event>>>>() {
+            @Override
+            public Observable<Optional<List<Event>>> call() {
+                try {
+                    List<Event> calendars = calendarRepository.getEvents(calendarId, minutes, TimeUnit.MINUTES);
+                    if (calendars.size() > 0) {
+                        return Observable.just(Optional.of(calendars));
+                    }
+                } catch (Exception error) {
+                    return Observable.error(error);
+                }
+                return Observable.empty();
+            }
+        });
+    }
 }

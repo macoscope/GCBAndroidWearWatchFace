@@ -76,7 +76,6 @@ public class CalendarRepository {
     }
 
     public List<Event> getEvents(long calendarId, long timeInterval, TimeUnit timeUnit) {
-
         Optional<String> calendarNameOptional = getCalendarDisplayName(calendarId);
         String calendarName = calendarNameOptional.isPresent() ? calendarNameOptional.get() : "";
         Uri.Builder builder = Instances.CONTENT_URI.buildUpon();

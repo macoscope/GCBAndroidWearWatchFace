@@ -19,6 +19,7 @@ import com.google.api.client.util.ExponentialBackOff;
 import com.google.api.services.calendar.CalendarScopes;
 
 import java.util.Arrays;
+import java.util.List;
 
 import pub.devrel.easypermissions.AfterPermissionGranted;
 import pub.devrel.easypermissions.EasyPermissions;
@@ -108,6 +109,11 @@ public class SyncPreferencesPresenter {
                         index >= 0
                                 ? listPreference.getEntries()[index]
                                 : null);
+                if(index >= 0) {
+                    long calendarId = Long.parseLong(listPreference.getEntryValues()[index].toString());
+                    loadEvents(calendarId, 55);
+                }
+
                 return true;
             }
         });
@@ -115,6 +121,33 @@ public class SyncPreferencesPresenter {
         initCalendarUseCase();
         loadAvailableCalendarsIfPermissionsGranted();
         setAccountPreferenceClickListener(accountPreference);
+    }
+
+    private void loadEvents(long calendarId, long minutesInterval) {
+        Subscription subscription = calendarUseCase.getEvents(calendarId, minutesInterval)
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(new Action1<Optional<List<Event>>>() {
+                    @Override
+                    public void call(Optional<List<Event>> listOptional) {
+                        showEvents(listOptional);
+                    }
+                });
+        compositeSubscription.add(subscription);
+    }
+
+
+    private void showEvents(Optional<List<Event>> listOptional){
+        if(listOptional.isPresent() && listOptional.get().size() > 0){
+            String string = "";
+            for(int i=0; i< listOptional.get().size(); i++){
+                string += listOptional.get().get(i).getTitle()+ "\n";
+            }
+            syncPreferencesView.showMessage(string);
+        } else {
+            syncPreferencesView.showMessage("No events in 55min for selected calendar");
+        }
+
     }
 
     private void setBindPreferenceSummariesToValues() {
@@ -263,8 +296,8 @@ public class SyncPreferencesPresenter {
     }
 
     @AfterPermissionGranted(REQUEST_PERMISSION_READ_CALENDAR)
-    private void loadAvailableCalendarsIfPermissionsGranted(){
-        if(EasyPermissions.hasPermissions(context, Manifest.permission.READ_CALENDAR)){
+    private void loadAvailableCalendarsIfPermissionsGranted() {
+        if (EasyPermissions.hasPermissions(context, Manifest.permission.READ_CALENDAR)) {
             loadAvailableCalendars();
         } else {
             EasyPermissions.requestPermissions(
@@ -281,7 +314,7 @@ public class SyncPreferencesPresenter {
         if (!TextUtils.isEmpty(googleAccountCredential.getSelectedAccountName())) {
             Subscription subscription = calendarUseCase.getCalendarsPreferenceList(googleAccountCredential.getSelectedAccountName())
                     .subscribeOn(Schedulers
-                    .io())
+                            .io())
                     .observeOn(AndroidSchedulers.mainThread())
                     .subscribe(new Action1<Optional<Pair<CharSequence[], CharSequence[]>>>() {
                         @Override
