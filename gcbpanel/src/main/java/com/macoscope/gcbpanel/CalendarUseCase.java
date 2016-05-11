@@ -1,5 +1,7 @@
 package com.macoscope.gcbpanel;
 
+import android.content.ContentResolver;
+import android.graphics.Path;
 import android.util.Pair;
 
 import com.eccyan.optional.Optional;
@@ -17,12 +19,12 @@ import rx.functions.Func1;
 
 public class CalendarUseCase {
 
-    private CalendarApiService calendarApiService;
+    private CalendarRepository calendarRepository;
 
     private Func1 calendarsListToPreferenceArraysMapFunction =
-            new Func1<Optional<List<CalendarListEntry>>, Optional<Pair<CharSequence[], CharSequence[]>>>() {
+            new Func1<Optional<List<CalendarModel>>, Optional<Pair<CharSequence[], CharSequence[]>>>() {
                 @Override
-                public Optional<Pair<CharSequence[], CharSequence[]>> call(Optional<List<CalendarListEntry>> listOptional) {
+                public Optional<Pair<CharSequence[], CharSequence[]>> call(Optional<List<CalendarModel>> listOptional) {
                     if (listOptional.isPresent() && !listOptional.get().isEmpty()) {
                         return getPreferenceListEntryValueArraysPair(listOptional.get());
                     } else {
@@ -31,62 +33,44 @@ public class CalendarUseCase {
                 }
             };
 
-    public CalendarUseCase(GoogleAccountCredential googleAccountCredential) {
-        setCredentials(googleAccountCredential);
+    public CalendarUseCase(ContentResolver contentResolver) {
+        calendarRepository = new CalendarRepository(contentResolver);
     }
 
-    public void setCredentials(GoogleAccountCredential googleAccountCredential) {
-        calendarApiService = new CalendarApiService(googleAccountCredential);
-    }
-
-    public Observable<Optional<List<CalendarListEntry>>> getCalendars() {
-        return Observable.defer(new Func0<Observable<Optional<List<CalendarListEntry>>>>() {
+    public Observable<Optional<List<CalendarModel>>> getCalendars(final String account){
+        return Observable.defer(new Func0<Observable<Optional<List<CalendarModel>>>>() {
             @Override
-            public Observable<Optional<List<CalendarListEntry>>> call() {
+            public Observable<Optional<List<CalendarModel>>> call() {
                 try {
-                    Optional<CalendarList> calendarList = calendarApiService.getCalendars();
-                    if (calendarList.isPresent()) {
-                        return Observable.just(Optional.of(calendarList.get().getItems()));
+                    List<CalendarModel> calendars = calendarRepository.getCalendars(account);
+                    if (calendars.size() > 0) {
+                        return Observable.just(Optional.of(calendars));
                     }
                 } catch (Exception error) {
                     return Observable.error(error);
                 }
-                return Observable.just(Optional.<List<CalendarListEntry>>empty());
+                return Observable.just(Optional.<List<CalendarModel>>empty());
             }
         });
     }
 
-    public Observable<Optional<Pair<CharSequence[], CharSequence[]>>> getPreferenceListCalendarsArrays() {
-        return getCalendars().map(calendarsListToPreferenceArraysMapFunction);
+    public Observable<Optional<Pair<CharSequence[], CharSequence[]>>> getCalendarsPreferenceList(String account){
+        return getCalendars(account).map(calendarsListToPreferenceArraysMapFunction);
     }
 
-    private Optional<Pair<CharSequence[], CharSequence[]>> getPreferenceListEntryValueArraysPair(List<CalendarListEntry> calendarEntries) {
+
+
+    private Optional<Pair<CharSequence[], CharSequence[]>> getPreferenceListEntryValueArraysPair(List<CalendarModel>
+                                                                                                         calendarEntries) {
         int size = calendarEntries.size();
         CharSequence[] entries = new CharSequence[size];
         CharSequence[] values = new CharSequence[size];
         for (int i = 0; i < calendarEntries.size(); i++) {
-            entries[i] = calendarEntries.get(i).getSummary();
-            values[i] = calendarEntries.get(i).getId();
+            CalendarModel calendarModel = calendarEntries.get(i);
+            entries[i] = calendarModel.getDisplayName();
+            values[i] = Long.toString(calendarModel.getId());
         }
         return Optional.of(new Pair<>(entries, values));
-    }
-
-    public Observable<Optional<List<Event>>> getEvents(final String calendarId, final int maxResults) {
-        return Observable.defer(new Func0<Observable<Optional<List<Event>>>>() {
-            @Override
-            public Observable<Optional<List<Event>>> call() {
-                try {
-                    Optional<Events> calendarList = calendarApiService.getEvents(calendarId, maxResults);
-                    if (calendarList.isPresent()) {
-                        return Observable.just(Optional.of(calendarList.get().getItems()));
-                    }
-                } catch (Exception error) {
-                    return Observable.error(error);
-                }
-                return Observable.just(Optional.<List<Event>>empty());
-            }
-        });
-
     }
 
 }

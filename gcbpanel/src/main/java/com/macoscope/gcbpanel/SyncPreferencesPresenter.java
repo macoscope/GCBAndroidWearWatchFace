@@ -35,6 +35,7 @@ public class SyncPreferencesPresenter {
     static final int REQUEST_ACCOUNT_PICKER = 1000;
     static final int REQUEST_GOOGLE_PLAY_SERVICES = 1002;
     static final int REQUEST_PERMISSION_GET_ACCOUNTS = 1003;
+    static final int REQUEST_PERMISSION_READ_CALENDAR = 1004;
 
     private static final String[] SCOPES = {CalendarScopes.CALENDAR_READONLY};
     private static final CharSequence[] EMPTY_CHARS_ARRAY = new CharSequence[]{};
@@ -112,14 +113,14 @@ public class SyncPreferencesPresenter {
         });
         initCredentials();
         initCalendarUseCase();
-        loadAvailableCalendarIds();
+        loadAvailableCalendarsIfPermissionsGranted();
         setAccountPreferenceClickListener(accountPreference);
     }
 
     private void setBindPreferenceSummariesToValues() {
         bindPreferenceSummaryToValue(syncFrequencyPreference);
         bindPreferenceSummaryToValue(accountPreference);
-//        bindPreferenceSummaryToValue(calendarListPreference);
+        bindPreferenceSummaryToValue(calendarListPreference);
     }
 
     /**
@@ -173,7 +174,7 @@ public class SyncPreferencesPresenter {
     }
 
     private void initCalendarUseCase() {
-        calendarUseCase = new CalendarUseCase(googleAccountCredential);
+        calendarUseCase = new CalendarUseCase(context.getContentResolver());
     }
 
 
@@ -228,7 +229,6 @@ public class SyncPreferencesPresenter {
         }
     }
 
-
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         switch (requestCode) {
             case REQUEST_GOOGLE_PLAY_SERVICES:
@@ -250,7 +250,7 @@ public class SyncPreferencesPresenter {
                         editor.commit();
                         accountPreference.setSummary(accountName);
                         googleAccountCredential.setSelectedAccountName(accountName);
-                        loadAvailableCalendarIds();
+                        loadAvailableCalendarsIfPermissionsGranted();
                     }
                 }
                 break;
@@ -262,10 +262,26 @@ public class SyncPreferencesPresenter {
         }
     }
 
-    private void loadAvailableCalendarIds() {
+    @AfterPermissionGranted(REQUEST_PERMISSION_READ_CALENDAR)
+    private void loadAvailableCalendarsIfPermissionsGranted(){
+        if(EasyPermissions.hasPermissions(context, Manifest.permission.READ_CALENDAR)){
+            loadAvailableCalendars();
+        } else {
+            EasyPermissions.requestPermissions(
+                    context,
+                    context.getString(R.string.read_calendar_permissions),
+                    REQUEST_PERMISSION_READ_CALENDAR,
+                    Manifest.permission.READ_CALENDAR);
+        }
+    }
+
+
+    private void loadAvailableCalendars() {
         enableCalendarsList(false);
         if (!TextUtils.isEmpty(googleAccountCredential.getSelectedAccountName())) {
-            Subscription subscription = calendarUseCase.getPreferenceListCalendarsArrays().subscribeOn(Schedulers.io())
+            Subscription subscription = calendarUseCase.getCalendarsPreferenceList(googleAccountCredential.getSelectedAccountName())
+                    .subscribeOn(Schedulers
+                    .io())
                     .observeOn(AndroidSchedulers.mainThread())
                     .subscribe(new Action1<Optional<Pair<CharSequence[], CharSequence[]>>>() {
                         @Override
