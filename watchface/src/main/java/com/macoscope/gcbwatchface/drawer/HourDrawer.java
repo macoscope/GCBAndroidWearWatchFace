@@ -1,4 +1,4 @@
-package com.macoscope.gcbwatchface;
+package com.macoscope.gcbwatchface.drawer;
 
 import android.graphics.Canvas;
 import android.graphics.Paint;
@@ -6,10 +6,14 @@ import android.graphics.Rect;
 import android.graphics.Typeface;
 import android.text.TextPaint;
 
+import com.macoscope.gcbwatchface.ColorPalette;
+import com.macoscope.gcbwatchface.formatter.HourFormatter;
+import com.macoscope.gcbwatchface.MeasureUtil;
+
 import java.util.Calendar;
 import java.util.TimeZone;
 
-public class HourDrawer implements Drawer{
+public class HourDrawer implements Drawer {
 
     private ColorPalette colorPalette;
     private Paint hourTextPaint;

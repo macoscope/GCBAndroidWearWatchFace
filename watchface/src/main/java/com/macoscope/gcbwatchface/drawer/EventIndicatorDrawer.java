@@ -1,4 +1,4 @@
-package com.macoscope.gcbwatchface;
+package com.macoscope.gcbwatchface.drawer;
 
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
@@ -8,6 +8,10 @@ import android.graphics.PorterDuff;
 import android.graphics.PorterDuffXfermode;
 import android.graphics.RectF;
 import android.support.annotation.VisibleForTesting;
+
+import com.macoscope.gcbwatchface.ColorPalette;
+import com.macoscope.gcbwatchface.MeasureUtil;
+import com.macoscope.gcbwatchface.PathEffectUtil;
 
 public class EventIndicatorDrawer implements Drawer {
     private static final float ARC_MASK_SWAP_ANGLE = 330;

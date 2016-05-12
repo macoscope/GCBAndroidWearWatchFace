@@ -1,4 +1,6 @@
-package com.macoscope.gcbwtachface;
+package com.macoscpoe.gcbmodel;
+
+import java.util.concurrent.TimeUnit;
 
 public class Event {
     private long id;
@@ -39,10 +41,13 @@ public class Event {
     }
 
     public Event(long id, long startDate, String title, String calendarDisplayName) {
-
         this.id = id;
         this.startDate = startDate;
         this.title = title;
         this.calendarDisplayName = calendarDisplayName;
+    }
+
+    public long getMinutesToEvent(long datePointTime){
+        return TimeUnit.MILLISECONDS.toMinutes(startDate - datePointTime);
     }
 }

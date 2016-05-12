@@ -21,6 +21,13 @@ import android.view.SurfaceHolder;
 import com.google.android.gms.wearable.DataMap;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
+import com.macoscope.gcbwatchface.drawer.EventDrawer;
+import com.macoscope.gcbwatchface.drawer.EventIndicatorDrawer;
+import com.macoscope.gcbwatchface.drawer.FaceDrawer;
+import com.macoscope.gcbwatchface.drawer.HourDrawer;
+import com.macoscope.gcbwatchface.drawer.PermissionsDrawer;
+import com.macoscope.gcbwatchface.formatter.EventFormatter;
+import com.macoscpoe.gcbmodel.Event;
 import com.patloew.rxwear.RxWear;
 import com.patloew.rxwear.transformers.MessageEventGetDataMap;
 

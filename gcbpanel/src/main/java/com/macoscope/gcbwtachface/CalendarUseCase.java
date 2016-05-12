@@ -4,6 +4,7 @@ import android.content.ContentResolver;
 import android.util.Pair;
 
 import com.eccyan.optional.Optional;
+import com.macoscpoe.gcbmodel.Event;
 
 import java.util.List;
 import java.util.concurrent.TimeUnit;

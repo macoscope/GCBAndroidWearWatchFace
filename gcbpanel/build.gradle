@@ -38,4 +38,5 @@ dependencies {
     }
     testCompile 'junit:junit:4.12'
     wearApp project(':watchface')
+    compile project(':gcbmodel')
 }

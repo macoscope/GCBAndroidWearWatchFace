@@ -1,4 +1,4 @@
-package com.macoscope.gcbwatchface;
+package com.macoscope.gcbwatchface.drawer;
 
 import android.content.Context;
 import android.content.res.Resources;
@@ -12,6 +12,11 @@ import android.view.Gravity;
 import android.view.View;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+
+import com.macoscope.gcbwatchface.ColorPalette;
+import com.macoscope.gcbwatchface.formatter.EventFormatter;
+import com.macoscope.gcbwatchface.MeasureUtil;
+import com.macoscope.gcbwatchface.R;
 
 public class EventDrawer implements Drawer {
     private static final int MAX_TITLE_LINES = 2;

@@ -1,4 +1,4 @@
-package com.macoscope.gcbwatchface;
+package com.macoscope.gcbwatchface.drawer;
 
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
@@ -9,7 +9,11 @@ import android.graphics.RectF;
 import android.graphics.SweepGradient;
 import android.support.annotation.VisibleForTesting;
 
-public class FaceDrawer implements Drawer{
+import com.macoscope.gcbwatchface.ColorPalette;
+import com.macoscope.gcbwatchface.MeasureUtil;
+import com.macoscope.gcbwatchface.PathEffectUtil;
+
+public class FaceDrawer implements Drawer {
     /**
      * Positions tweaked for best gradient position on canvas rotation
      */

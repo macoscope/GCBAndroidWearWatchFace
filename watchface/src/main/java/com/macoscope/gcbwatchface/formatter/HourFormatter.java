@@ -1,4 +1,4 @@
-package com.macoscope.gcbwatchface;
+package com.macoscope.gcbwatchface.formatter;
 
 import java.util.Calendar;
 import java.util.GregorianCalendar;

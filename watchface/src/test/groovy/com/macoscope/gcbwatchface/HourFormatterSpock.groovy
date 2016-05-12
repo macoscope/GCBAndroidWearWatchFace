@@ -1,5 +1,6 @@
 package com.macoscope.gcbwatchface
 
+import com.macoscope.gcbwatchface.formatter.HourFormatter
 import spock.lang.Shared
 import spock.lang.Specification
 import spock.lang.Unroll

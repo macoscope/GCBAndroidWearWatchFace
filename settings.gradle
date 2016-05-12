@@ -1,1 +1,1 @@
-include ':watchface', ':gcbpanel'
+include ':watchface', ':gcbpanel', ':gcbmodel'

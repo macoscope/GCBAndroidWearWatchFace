@@ -8,6 +8,7 @@ import android.provider.CalendarContract.Calendars;
 import android.provider.CalendarContract.Instances;
 
 import com.eccyan.optional.Optional;
+import com.macoscpoe.gcbmodel.Event;
 
 import java.util.ArrayList;
 import java.util.List;
