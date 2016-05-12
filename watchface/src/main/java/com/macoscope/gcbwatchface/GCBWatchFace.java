@@ -15,6 +15,7 @@ import android.os.Handler;
 import android.os.Message;
 import android.support.wearable.watchface.CanvasWatchFaceService;
 import android.support.wearable.watchface.WatchFaceStyle;
+import android.util.Log;
 import android.view.SurfaceHolder;
 
 import com.google.android.gms.wearable.DataMap;
@@ -89,12 +90,10 @@ public class GCBWatchFace extends CanvasWatchFaceService {
          */
         private boolean lowBitAmbient;
         private boolean drawInEventMode = false;
-        boolean permissionsGranted = false;
 
         private CompositeSubscription compositeSubscription;
 
         private ColorPalette colorPalette;
-        private PermissionsGuard permissionsGuard;
 
         private Calendar time;
         private Calendar formatterCalendar;
@@ -143,15 +142,16 @@ public class GCBWatchFace extends CanvasWatchFaceService {
             initPaints();
             initRectangles();
             initDrawers(context);
-            initPermissionGuard();
             RxWear.init(context);
             compositeSubscription = new CompositeSubscription();
-            Subscription subscription = RxWear.Data.listen()
-                    .compose()
+            Log.d("WEAR", "Registered rxWear");
+            Subscription subscription = RxWear.Message.listen()
+                    .compose(MessageEventGetDataMap.filterByPath("/eventsList"))
                     .subscribe(new Action1<DataMap>() {
                         @Override
                         public void call(DataMap dataMap) {
                             String json = dataMap.getString("eventsList");
+                            Log.d("WATCH", "Received data: "+json);
                             Gson gson = new Gson();
                             Type eventListType = new TypeToken<List<Event>>() {
                             }.getType();
@@ -165,10 +165,6 @@ public class GCBWatchFace extends CanvasWatchFaceService {
                         }
                     });
             compositeSubscription.add(subscription);
-        }
-
-        private void initPermissionGuard() {
-            permissionsGuard = new PermissionsGuard();
         }
 
         private void initEventFormatter() {
@@ -299,7 +295,6 @@ public class GCBWatchFace extends CanvasWatchFaceService {
         public void onDraw(Canvas canvas, Rect bounds) {
             time.setTimeInMillis(System.currentTimeMillis());
             canvas.drawColor(colorPalette.backgroundColor);
-            permissionsGranted = permissionsGuard.isCalendarPermissionsGranted(getApplicationContext());
 
             float centerX = bounds.centerX();
             float centerY = bounds.centerY();
@@ -308,7 +303,7 @@ public class GCBWatchFace extends CanvasWatchFaceService {
             initWatchFaceBitmap(bounds, strokeSize);
 
             if (drawInEventMode) {
-                if (permissionsGranted) {
+                if (true) {
                     eventDrawer.draw(eventFormatter, canvas, innerOval.width() / 2, centerX, centerY, time.getTimeInMillis());
                 } else {
                     permissionsDrawer.draw(canvas, bounds.width(), centerX, centerY);
@@ -317,7 +312,7 @@ public class GCBWatchFace extends CanvasWatchFaceService {
                 hourDrawer.draw(canvas, time, centerX, centerY);
             }
             faceDrawer.draw(faceBitmap, outerOval, arcRect, bounds.width(), bounds.height(), minutes);
-            if (permissionsGranted && eventFormatter.isReadyToDraw()) {
+            if (true && eventFormatter.isReadyToDraw()) {
                 indicatorDrawer.draw(faceBitmap, eventFormatter.getHourMinutes(), outerOval, innerOval, arcRect);
             }
 
@@ -408,6 +403,8 @@ public class GCBWatchFace extends CanvasWatchFaceService {
         public void eventsLoaded(List<Event> events) {
             eventFormatter.setCalendarName(events.get(0).getCalendarDisplayName());
             eventFormatter.setEvent(events.get(0));
+            invalidate();
+            Log.d("WATCH", "events "+events);
         }
     }
 }

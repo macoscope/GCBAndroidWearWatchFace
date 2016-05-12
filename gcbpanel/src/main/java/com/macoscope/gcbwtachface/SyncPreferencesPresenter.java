@@ -9,6 +9,7 @@ import android.preference.ListPreference;
 import android.preference.Preference;
 import android.preference.PreferenceManager;
 import android.text.TextUtils;
+import android.util.Log;
 import android.util.Pair;
 
 import com.eccyan.optional.Optional;
@@ -156,12 +157,13 @@ public class SyncPreferencesPresenter {
     private void sendEvents(Optional<List<Event>> listOptional){
         if(listOptional.isPresent() && listOptional.get().size() > 0){
             Gson gson = new Gson();
-            String eventsGson = gson.toJson(listOptional.get());
+            final String eventsGson = gson.toJson(listOptional.get());
             Subscription subscription = RxWear.Message.SendDataMap.toAllRemoteNodes("/eventsList")
                     .putString("eventsList", eventsGson)
                     .toObservable().subscribe(new Action1<Integer>() {
                 @Override
                 public void call(Integer integer) {
+                    Log.d("MOBILE", "SEND: "+eventsGson);
                     syncPreferencesView.showMessage("Events send");
                 }
             }, new Action1<Throwable>() {
