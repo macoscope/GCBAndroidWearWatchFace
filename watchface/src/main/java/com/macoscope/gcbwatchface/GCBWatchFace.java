@@ -13,17 +13,26 @@ import android.graphics.Typeface;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
-import android.support.wearable.provider.WearableCalendarContract;
 import android.support.wearable.watchface.CanvasWatchFaceService;
 import android.support.wearable.watchface.WatchFaceStyle;
 import android.view.SurfaceHolder;
 
+import com.google.android.gms.wearable.DataMap;
+import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
+import com.patloew.rxwear.RxWear;
+import com.patloew.rxwear.transformers.MessageEventGetDataMap;
+
 import java.lang.ref.WeakReference;
+import java.lang.reflect.Type;
 import java.util.Calendar;
 import java.util.GregorianCalendar;
 import java.util.List;
 import java.util.TimeZone;
-import java.util.concurrent.TimeUnit;
+
+import rx.Subscription;
+import rx.functions.Action1;
+import rx.subscriptions.CompositeSubscription;
 
 /**
  * Analog watch face with a ticking second hand. In ambient mode, the second hand isn't shown. On
@@ -39,14 +48,13 @@ public class GCBWatchFace extends CanvasWatchFaceService {
      * Handler message id for updating the time periodically in interactive mode.
      */
     private static final int MSG_UPDATE_TIME = 0;
-    private static final int MSG_LOAD_MEETINGS = 1;
 
     @Override
     public GCBWatchFaceEngine onCreateEngine() {
         return new GCBWatchFaceEngine();
     }
 
-    private class GCBWatchFaceEngine extends CanvasWatchFaceService.Engine implements EventsLoadedListener {
+    private class GCBWatchFaceEngine extends CanvasWatchFaceService.Engine {
         private static final String MINUTES_FONT_FAMILY = "sans-serif-light";
 
         private class EngineHandler extends Handler {
@@ -65,14 +73,6 @@ public class GCBWatchFace extends CanvasWatchFaceService {
                         case MSG_UPDATE_TIME:
                             engine.handleUpdateTimeMessage();
                             break;
-                        case MSG_LOAD_MEETINGS:
-                            if (loadEventsTask != null) {
-                                loadEventsTask.cancel();
-                            } else {
-                                loadEventsTask = new LoadCalendarEventsTask(getApplicationContext(), engine);
-                            }
-                            loadEventsTask.execute(1, 55, TimeUnit.MINUTES);
-                            break;
                     }
                 }
             }
@@ -82,8 +82,6 @@ public class GCBWatchFace extends CanvasWatchFaceService {
 
         private boolean registeredTimeZoneReceiver = false;
         private boolean ambientMode;
-        private boolean registeredPermissionsReceiver = false;
-        private LoadCalendarEventsTask loadEventsTask;
 
         /**
          * Whether the display supports fewer bits for each color in ambient mode. When true, we
@@ -92,6 +90,8 @@ public class GCBWatchFace extends CanvasWatchFaceService {
         private boolean lowBitAmbient;
         private boolean drawInEventMode = false;
         boolean permissionsGranted = false;
+
+        private CompositeSubscription compositeSubscription;
 
         private ColorPalette colorPalette;
         private PermissionsGuard permissionsGuard;
@@ -119,16 +119,6 @@ public class GCBWatchFace extends CanvasWatchFaceService {
 
         private EventFormatter eventFormatter;
 
-        private BroadcastReceiver permissionsChangeReceiver = new BroadcastReceiver() {
-            @Override
-            public void onReceive(Context context, Intent intent) {
-                if (Intent.ACTION_PROVIDER_CHANGED.equals(intent.getAction())
-                        && WearableCalendarContract.CONTENT_URI.equals(intent.getData())) {
-                    engineHandler.sendEmptyMessage(MSG_LOAD_MEETINGS);
-                }
-            }
-        };
-
         private final BroadcastReceiver timeZoneReceiver = new BroadcastReceiver() {
             @Override
             public void onReceive(Context context, Intent intent) {
@@ -154,17 +144,31 @@ public class GCBWatchFace extends CanvasWatchFaceService {
             initRectangles();
             initDrawers(context);
             initPermissionGuard();
-            triggerLoadingEventsIfPermissionsGranted();
+            RxWear.init(context);
+            compositeSubscription = new CompositeSubscription();
+            Subscription subscription = RxWear.Message.listen()
+                    .compose(MessageEventGetDataMap.filterByPath("/eventsList"))
+                    .subscribe(new Action1<DataMap>() {
+                        @Override
+                        public void call(DataMap dataMap) {
+                            String json = dataMap.getString("eventsList");
+                            Gson gson = new Gson();
+                            Type eventListType = new TypeToken<List<Event>>() {
+                            }.getType();
+                            List<Event> events = gson.fromJson(json, eventListType);
+                            eventsLoaded(events);
+                        }
+                    }, new Action1<Throwable>() {
+                        @Override
+                        public void call(Throwable throwable) {
+                            throwable.printStackTrace();
+                        }
+                    });
+            compositeSubscription.add(subscription);
         }
 
         private void initPermissionGuard() {
             permissionsGuard = new PermissionsGuard();
-        }
-
-        private void triggerLoadingEventsIfPermissionsGranted() {
-            if (permissionsGuard.isCalendarPermissionsGranted(getApplicationContext())) {
-                engineHandler.sendEmptyMessage(MSG_LOAD_MEETINGS);
-            }
         }
 
         private void initEventFormatter() {
@@ -196,7 +200,7 @@ public class GCBWatchFace extends CanvasWatchFaceService {
                     MeasureUtil.getDimensionToPixel(getResources(), R.dimen.ovals_gap));
             permissionsDrawer = new PermissionsDrawer(colorPalette, MeasureUtil.getDimensionToPixel(getResources(),
                     R.dimen.permissions_not_granted), permissionsNotGranted, MeasureUtil.getDimensionToPixel
-                    (getResources(), R.dimen.inner_oval_stroke), strokeSize,  MeasureUtil.getDimensionToPixel
+                    (getResources(), R.dimen.inner_oval_stroke), strokeSize, MeasureUtil.getDimensionToPixel
                     (getResources(), R.dimen.ovals_gap));
 
         }
@@ -232,8 +236,8 @@ public class GCBWatchFace extends CanvasWatchFaceService {
 
         @Override
         public void onDestroy() {
+            compositeSubscription.unsubscribe();
             engineHandler.removeMessages(MSG_UPDATE_TIME);
-            engineHandler.removeMessages(MSG_LOAD_MEETINGS);
             super.onDestroy();
         }
 
@@ -285,21 +289,10 @@ public class GCBWatchFace extends CanvasWatchFaceService {
                     break;
                 case TAP_TYPE_TAP:
                     // The user has completed the tap gesture.
-                    if(drawInEventMode && !permissionsGuard.isCalendarPermissionsGranted(getApplicationContext())){
-                        launchPermissionsRequiredActivity();
-                    }
                     drawInEventMode = !drawInEventMode;
                     break;
             }
             invalidate();
-        }
-
-        private void launchPermissionsRequiredActivity(){
-            Intent permissionIntent = new Intent(
-                    getApplicationContext(),
-                    CalendarPermissionActivity.class);
-            permissionIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-            startActivity(permissionIntent);
         }
 
         @Override
@@ -347,15 +340,9 @@ public class GCBWatchFace extends CanvasWatchFaceService {
                 registerTimeZoneChangeReceiver();
                 // Update time zone in case it changed while we weren't visible.
                 updateTimeZone();
-                if (permissionsGuard.isCalendarPermissionsGranted(getApplicationContext())) {
-                    registerPermissionsChangeReceiver();
-                    engineHandler.sendEmptyMessage(MSG_LOAD_MEETINGS);
-                }
 
             } else {
                 unregisterTimeZoneReceiver();
-                unregisterPermissionsChangeReceiver();
-                engineHandler.removeMessages(MSG_LOAD_MEETINGS);
             }
 
             // Whether the timer should be running depends on whether we're visible (as well as
@@ -378,27 +365,10 @@ public class GCBWatchFace extends CanvasWatchFaceService {
             }
         }
 
-        private void registerPermissionsChangeReceiver() {
-            if (!registeredPermissionsReceiver) {
-                registeredPermissionsReceiver = true;
-                IntentFilter filter = new IntentFilter(Intent.ACTION_PROVIDER_CHANGED);
-                filter.addDataScheme("content");
-                filter.addDataAuthority(WearableCalendarContract.AUTHORITY, null);
-                registerReceiver(permissionsChangeReceiver, filter);
-            }
-        }
-
         private void unregisterTimeZoneReceiver() {
             if (registeredTimeZoneReceiver) {
                 registeredTimeZoneReceiver = false;
                 unregisterReceiver(timeZoneReceiver);
-            }
-        }
-
-        private void unregisterPermissionsChangeReceiver() {
-            if (registeredPermissionsReceiver) {
-                registeredPermissionsReceiver = false;
-                unregisterReceiver(permissionsChangeReceiver);
             }
         }
 
@@ -435,16 +405,9 @@ public class GCBWatchFace extends CanvasWatchFaceService {
             }
         }
 
-        @Override
-        public void onEventsLoaded(List<EventModel> events) {
-            EventModel eventModel = events.get(0);
-            eventFormatter.setCalendarName("test");
-            eventFormatter.setEvent(eventModel);
-        }
-
-        @Override
-        public void onNoEventsLoaded() {
-
+        public void eventsLoaded(List<Event> events) {
+            eventFormatter.setCalendarName(events.get(0).getCalendarDisplayName());
+            eventFormatter.setEvent(events.get(0));
         }
     }
 }

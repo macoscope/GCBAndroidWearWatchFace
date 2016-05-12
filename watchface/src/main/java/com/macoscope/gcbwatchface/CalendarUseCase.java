@@ -1,7 +1,7 @@
 package com.macoscope.gcbwatchface;
 
 
-import android.content.ContentResolver;
+import android.content.Context;
 
 import com.eccyan.optional.Optional;
 
@@ -14,9 +14,11 @@ import rx.functions.Func0;
 public class CalendarUseCase {
 
     private EventsRepository eventsRepository;
+    private Context context;
 
-    public CalendarUseCase(ContentResolver contentResolver) {
-        this.eventsRepository = new EventsRepository(contentResolver);
+    public CalendarUseCase(Context context) {
+        this.context = context;
+        this.eventsRepository = new EventsRepository(context.getContentResolver());
     }
 
     public Observable<Optional<String>> getCalendarDisplayName(final int calendarId) {
@@ -33,6 +35,6 @@ public class CalendarUseCase {
     }
 
     public void logCalendars(){
-        eventsRepository.logCalendarsDisplayName();
+        eventsRepository.logCalendarsDisplayName(context);
     }
 }

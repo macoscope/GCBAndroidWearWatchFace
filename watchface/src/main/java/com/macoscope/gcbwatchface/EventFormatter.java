@@ -7,13 +7,13 @@ import java.util.Calendar;
 public class EventFormatter {
     private String calendarName;
     private Calendar calendar;
-    private EventModel event;
+    private Event event;
 
     public EventFormatter(Calendar calendar) {
         this.calendar = calendar;
     }
 
-    public void setEvent(EventModel event) {
+    public void setEvent(Event event) {
         this.event = event;
     }
 

@@ -23,6 +23,9 @@
             android:label="@string/gcb_watch_name"
             android:permission="android.permission.BIND_WALLPAPER">
             <meta-data
+                android:name="com.google.android.wearable.watchface.companionConfigurationAction"
+                android:value="com.macoscope.gcbpanel.CONFIG_DIGITAL" />
+            <meta-data
                 android:name="android.service.wallpaper"
                 android:resource="@xml/watch_face"/>
             <meta-data

@@ -9,6 +9,7 @@ import android.preference.ListPreference;
 import android.preference.Preference;
 import android.preference.PreferenceManager;
 import android.text.TextUtils;
+import android.util.Log;
 import android.util.Pair;
 
 import com.eccyan.optional.Optional;
@@ -17,6 +18,9 @@ import com.google.android.gms.common.GoogleApiAvailability;
 import com.google.api.client.googleapis.extensions.android.gms.auth.GoogleAccountCredential;
 import com.google.api.client.util.ExponentialBackOff;
 import com.google.api.services.calendar.CalendarScopes;
+import com.google.gson.Gson;
+import com.patloew.rxwear.GoogleAPIConnectionException;
+import com.patloew.rxwear.RxWear;
 
 import java.util.Arrays;
 import java.util.List;
@@ -92,7 +96,7 @@ public class SyncPreferencesPresenter {
         this.calendarListPreference = calendarListPreference;
         this.syncFrequencyPreference = syncFrequencyPreference;
         this.compositeSubscription = new CompositeSubscription();
-
+        RxWear.init(context);
         setBindPreferenceSummariesToValues();
         calendarListPreference.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
             @Override
@@ -131,6 +135,7 @@ public class SyncPreferencesPresenter {
                     @Override
                     public void call(Optional<List<Event>> listOptional) {
                         showEvents(listOptional);
+                        sendEvents(listOptional);
                     }
                 });
         compositeSubscription.add(subscription);
@@ -147,7 +152,31 @@ public class SyncPreferencesPresenter {
         } else {
             syncPreferencesView.showMessage("No events in 55min for selected calendar");
         }
+    }
 
+    private void sendEvents(Optional<List<Event>> listOptional){
+        if(listOptional.isPresent() && listOptional.get().size() > 0){
+            Gson gson = new Gson();
+            String eventsGson = gson.toJson(listOptional.get());
+            Subscription subscription = RxWear.Message.SendDataMap.toAllRemoteNodes("/eventsList")
+                    .putString("eventsList", eventsGson)
+                    .toObservable().subscribe(new Action1<Integer>() {
+                @Override
+                public void call(Integer integer) {
+                    syncPreferencesView.showMessage("Events send");
+                }
+            }, new Action1<Throwable>() {
+                @Override
+                public void call(Throwable throwable) {
+                    if(throwable instanceof GoogleAPIConnectionException) {
+                       syncPreferencesView.showMessage("Android Wear app is not installed");
+                    } else {
+                        syncPreferencesView.showMessage("Could not send message");
+                    }
+                }
+            });
+            compositeSubscription.add(subscription);
+        }
     }
 
     private void setBindPreferenceSummariesToValues() {
@@ -371,5 +400,4 @@ public class SyncPreferencesPresenter {
         calendarListPreference.setEntries(entries);
         calendarListPreference.setEntryValues(values);
     }
-
 }

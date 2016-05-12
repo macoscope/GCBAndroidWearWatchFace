@@ -28,7 +28,7 @@ public class LoadCalendarEventsTask {
 
     public LoadCalendarEventsTask(Context context, EventsLoadedListener eventsLoadedListener) {
         this.eventsLoadedListener = eventsLoadedListener;
-        this.calendarUseCase = new CalendarUseCase(context.getContentResolver());
+        this.calendarUseCase = new CalendarUseCase(context);
         this.powerManager = (PowerManager) context.getSystemService(Context.POWER_SERVICE);
     }
 
