@@ -25,8 +25,9 @@ import com.macoscope.gcbwatchface.drawer.EventDrawer;
 import com.macoscope.gcbwatchface.drawer.EventIndicatorDrawer;
 import com.macoscope.gcbwatchface.drawer.FaceDrawer;
 import com.macoscope.gcbwatchface.drawer.HourDrawer;
-import com.macoscope.gcbwatchface.drawer.PermissionsDrawer;
+import com.macoscope.gcbwatchface.drawer.PlaceholderDrawer;
 import com.macoscope.gcbwatchface.formatter.EventFormatter;
+import com.macoscpoe.gcbmodel.CommunicationConfig;
 import com.macoscpoe.gcbmodel.Event;
 import com.patloew.rxwear.RxWear;
 import com.patloew.rxwear.transformers.MessageEventGetDataMap;
@@ -113,7 +114,6 @@ public class GCBWatchFace extends CanvasWatchFaceService {
 
         private float strokeSize;
         private float padding;
-        private String permissionsNotGranted;
 
         private Typeface typefaceLight;
 
@@ -121,7 +121,7 @@ public class GCBWatchFace extends CanvasWatchFaceService {
         private EventDrawer eventDrawer;
         private FaceDrawer faceDrawer;
         private EventIndicatorDrawer indicatorDrawer;
-        private PermissionsDrawer permissionsDrawer;
+        private PlaceholderDrawer placeholderDrawer;
 
         private EventFormatter eventFormatter;
 
@@ -153,11 +153,11 @@ public class GCBWatchFace extends CanvasWatchFaceService {
             compositeSubscription = new CompositeSubscription();
             Log.d("WEAR", "Registered rxWear");
             Subscription subscription = RxWear.Message.listen()
-                    .compose(MessageEventGetDataMap.filterByPath("/eventsList"))
+                    .compose(MessageEventGetDataMap.filterByPath(CommunicationConfig.EVENTS_LIST_PATH))
                     .subscribe(new Action1<DataMap>() {
                         @Override
                         public void call(DataMap dataMap) {
-                            String json = dataMap.getString("eventsList");
+                            String json = dataMap.getString(CommunicationConfig.EVENTS_LIST_DATA_KEY);
                             Log.d("WATCH", "Received data: "+json);
                             Gson gson = new Gson();
                             Type eventListType = new TypeToken<List<Event>>() {
@@ -189,7 +189,6 @@ public class GCBWatchFace extends CanvasWatchFaceService {
                 typefaceLight = Typeface.DEFAULT;
             }
 
-            permissionsNotGranted = getString(R.string.calendar_permission_not_approved);
         }
 
         private void initDrawers(Context context) {
@@ -201,8 +200,8 @@ public class GCBWatchFace extends CanvasWatchFaceService {
                     MeasureUtil.getDimensionToPixel(getResources(), R.dimen.inner_oval_stroke),
                     strokeSize,
                     MeasureUtil.getDimensionToPixel(getResources(), R.dimen.ovals_gap));
-            permissionsDrawer = new PermissionsDrawer(colorPalette, MeasureUtil.getDimensionToPixel(getResources(),
-                    R.dimen.permissions_not_granted), permissionsNotGranted, MeasureUtil.getDimensionToPixel
+            placeholderDrawer = new PlaceholderDrawer(colorPalette, MeasureUtil.getDimensionToPixel(getResources(),
+                    R.dimen.permissions_not_granted), "nie", MeasureUtil.getDimensionToPixel
                     (getResources(), R.dimen.inner_oval_stroke), strokeSize, MeasureUtil.getDimensionToPixel
                     (getResources(), R.dimen.ovals_gap));
 
@@ -267,7 +266,7 @@ public class GCBWatchFace extends CanvasWatchFaceService {
                     eventDrawer.setAmbientMode(inAmbientMode);
                     indicatorDrawer.setAmbientMode(inAmbientMode);
                     bitmapPaint.setAntiAlias(!inAmbientMode);
-                    permissionsDrawer.setAmbientMode(inAmbientMode);
+                    placeholderDrawer.setAmbientMode(inAmbientMode);
                 }
                 invalidate();
             }
@@ -310,16 +309,16 @@ public class GCBWatchFace extends CanvasWatchFaceService {
             initWatchFaceBitmap(bounds, strokeSize);
 
             if (drawInEventMode) {
-                if (true) {
+                if (eventFormatter.hasValidEvent()) {
                     eventDrawer.draw(eventFormatter, canvas, innerOval.width() / 2, centerX, centerY, time.getTimeInMillis());
                 } else {
-                    permissionsDrawer.draw(canvas, bounds.width(), centerX, centerY);
+                    placeholderDrawer.draw(canvas, bounds.width(), centerX, centerY);
                 }
             } else {
                 hourDrawer.draw(canvas, time, centerX, centerY);
             }
             faceDrawer.draw(faceBitmap, outerOval, arcRect, bounds.width(), bounds.height(), minutes);
-            if (true && eventFormatter.isReadyToDraw()) {
+            if (eventFormatter.hasValidEvent()) {
                 indicatorDrawer.draw(faceBitmap, eventFormatter.getHourMinutes(), outerOval, innerOval, arcRect);
             }
 

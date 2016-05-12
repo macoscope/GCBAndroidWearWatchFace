@@ -19,6 +19,7 @@ import com.google.api.client.googleapis.extensions.android.gms.auth.GoogleAccoun
 import com.google.api.client.util.ExponentialBackOff;
 import com.google.api.services.calendar.CalendarScopes;
 import com.google.gson.Gson;
+import com.macoscpoe.gcbmodel.CommunicationConfig;
 import com.macoscpoe.gcbmodel.Event;
 import com.patloew.rxwear.GoogleAPIConnectionException;
 import com.patloew.rxwear.RxWear;
@@ -159,8 +160,8 @@ public class SyncPreferencesPresenter {
         if(listOptional.isPresent() && listOptional.get().size() > 0){
             Gson gson = new Gson();
             final String eventsGson = gson.toJson(listOptional.get());
-            Subscription subscription = RxWear.Message.SendDataMap.toAllRemoteNodes("/eventsList")
-                    .putString("eventsList", eventsGson)
+            Subscription subscription = RxWear.Message.SendDataMap.toAllRemoteNodes(CommunicationConfig.EVENTS_LIST_PATH)
+                    .putString(CommunicationConfig.EVENTS_LIST_DATA_KEY, eventsGson)
                     .toObservable().subscribe(new Action1<Integer>() {
                 @Override
                 public void call(Integer integer) {
@@ -241,7 +242,6 @@ public class SyncPreferencesPresenter {
         calendarUseCase = new CalendarUseCase(context.getContentResolver());
     }
 
-
     /**
      * Check that Google Play services APK is installed and up to date.
      *
@@ -318,11 +318,6 @@ public class SyncPreferencesPresenter {
                     }
                 }
                 break;
-//            case REQUEST_AUTHORIZATION:
-//                if (resultCode == RESULT_OK) {
-//                    chooseAccountIfGooglePlayServicesAvailable();
-//                }
-//                break;
         }
     }
 

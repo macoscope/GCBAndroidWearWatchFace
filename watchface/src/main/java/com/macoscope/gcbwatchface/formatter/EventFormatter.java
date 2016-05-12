@@ -42,8 +42,8 @@ public class EventFormatter {
         return calendar.get(Calendar.MINUTE);
     }
 
-    public boolean isReadyToDraw(){
-        return event != null;
+    public boolean hasValidEvent(){
+        return event != null && event.isValid();
     }
 
 

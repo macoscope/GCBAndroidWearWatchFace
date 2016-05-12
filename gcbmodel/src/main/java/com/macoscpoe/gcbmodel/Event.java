@@ -50,4 +50,8 @@ public class Event {
     public long getMinutesToEvent(long datePointTime){
         return TimeUnit.MILLISECONDS.toMinutes(startDate - datePointTime);
     }
+
+    public boolean isValid(){
+        return startDate > System.currentTimeMillis();
+    }
 }

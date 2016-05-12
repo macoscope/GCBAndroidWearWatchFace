@@ -2,7 +2,6 @@
     <string name="app_name">GCBWatchFace</string>
     <string name="gcb_watch_name">GCB Watch Face</string>
     <string name="starts_in">starts in</string>
-    <string name="calendar_permission_activity">Calendar Permissions</string>
     <string name="calendar_permission_text">GCBWatchFace requires Calendar access.</string>
     <string name="calendar_permission_not_approved">WatchFace Requires Calendar permission. Long press or visit Permissions
         Settings</string>

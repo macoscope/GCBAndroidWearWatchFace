@@ -112,7 +112,7 @@ public class EventDrawer implements Drawer {
 
     public void draw(EventFormatter eventViewModel, Canvas canvas, float radius, float centerX, float centerY,
                      long timeInMillis) {
-        if(eventViewModel.isReadyToDraw()) {
+        if(eventViewModel.hasValidEvent()) {
             drawEventName(canvas, bitmapPaint, radius, eventViewModel.getName(), centerX, centerY);
             drawEventCalendarName(canvas, bitmapPaint, radius, eventViewModel.getCalendarName(), centerX, centerY);
             canvas.drawText(startsIn, centerX, centerY + startsInHeight, startsInTextPaint);

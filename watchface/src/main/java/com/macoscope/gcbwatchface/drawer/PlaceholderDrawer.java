@@ -8,7 +8,7 @@ import android.text.TextPaint;
 
 import com.macoscope.gcbwatchface.ColorPalette;
 
-public class PermissionsDrawer implements Drawer {
+public class PlaceholderDrawer implements Drawer {
 
     private ColorPalette colorPalette;
     private float ovalsSummaryGap;
@@ -17,7 +17,7 @@ public class PermissionsDrawer implements Drawer {
     private StaticLayout staticLayout;
     private int layoutWidth;
 
-    public PermissionsDrawer(ColorPalette colorPalette, float textSize, String permissions, float innerStrokeSize, float outerStroke, float
+    public PlaceholderDrawer(ColorPalette colorPalette, float textSize, String permissions, float innerStrokeSize, float outerStroke, float
             ovalsGap) {
         this.colorPalette = colorPalette;
         this.ovalsSummaryGap = 2 * innerStrokeSize + 2 * outerStroke + 2 * ovalsGap;
