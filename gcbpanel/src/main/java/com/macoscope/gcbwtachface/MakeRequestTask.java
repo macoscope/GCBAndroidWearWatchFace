@@ -1,4 +1,4 @@
-package com.macoscope.gcbpanel;
+package com.macoscope.gcbwtachface;
 
 import android.os.AsyncTask;
 

@@ -1,4 +1,4 @@
-package com.macoscope.gcbpanel;
+package com.macoscope.gcbwtachface;
 
 import android.Manifest;
 import android.accounts.AccountManager;
@@ -9,7 +9,6 @@ import android.preference.ListPreference;
 import android.preference.Preference;
 import android.preference.PreferenceManager;
 import android.text.TextUtils;
-import android.util.Log;
 import android.util.Pair;
 
 import com.eccyan.optional.Optional;

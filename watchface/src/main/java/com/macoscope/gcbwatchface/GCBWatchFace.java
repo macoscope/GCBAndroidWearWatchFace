@@ -146,8 +146,8 @@ public class GCBWatchFace extends CanvasWatchFaceService {
             initPermissionGuard();
             RxWear.init(context);
             compositeSubscription = new CompositeSubscription();
-            Subscription subscription = RxWear.Message.listen()
-                    .compose(MessageEventGetDataMap.filterByPath("/eventsList"))
+            Subscription subscription = RxWear.Data.listen()
+                    .compose()
                     .subscribe(new Action1<DataMap>() {
                         @Override
                         public void call(DataMap dataMap) {

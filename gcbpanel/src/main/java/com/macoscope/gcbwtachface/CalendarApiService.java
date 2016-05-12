@@ -1,4 +1,4 @@
-package com.macoscope.gcbpanel;
+package com.macoscope.gcbwtachface;
 
 import com.eccyan.optional.Optional;
 import com.google.api.client.extensions.android.http.AndroidHttp;
