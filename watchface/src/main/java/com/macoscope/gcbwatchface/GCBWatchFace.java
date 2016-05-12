@@ -18,30 +18,20 @@ import android.support.wearable.watchface.WatchFaceStyle;
 import android.util.Log;
 import android.view.SurfaceHolder;
 
-import com.google.android.gms.wearable.DataMap;
-import com.google.gson.Gson;
-import com.google.gson.reflect.TypeToken;
+import com.eccyan.optional.Optional;
 import com.macoscope.gcbwatchface.drawer.EventDrawer;
 import com.macoscope.gcbwatchface.drawer.EventIndicatorDrawer;
 import com.macoscope.gcbwatchface.drawer.FaceDrawer;
 import com.macoscope.gcbwatchface.drawer.HourDrawer;
 import com.macoscope.gcbwatchface.drawer.PlaceholderDrawer;
 import com.macoscope.gcbwatchface.formatter.EventFormatter;
-import com.macoscpoe.gcbmodel.CommunicationConfig;
 import com.macoscpoe.gcbmodel.Event;
-import com.patloew.rxwear.RxWear;
-import com.patloew.rxwear.transformers.MessageEventGetDataMap;
 
 import java.lang.ref.WeakReference;
-import java.lang.reflect.Type;
 import java.util.Calendar;
 import java.util.GregorianCalendar;
 import java.util.List;
 import java.util.TimeZone;
-
-import rx.Subscription;
-import rx.functions.Action1;
-import rx.subscriptions.CompositeSubscription;
 
 /**
  * Analog watch face with a ticking second hand. In ambient mode, the second hand isn't shown. On
@@ -57,6 +47,11 @@ public class GCBWatchFace extends CanvasWatchFaceService {
      * Handler message id for updating the time periodically in interactive mode.
      */
     private static final int MSG_UPDATE_TIME = 0;
+
+    /**
+     * Handler message id for updating the event.
+     */
+    private static final int MSG_UPDATE_EVENT = 1;
 
     @Override
     public GCBWatchFaceEngine onCreateEngine() {
@@ -79,16 +74,19 @@ public class GCBWatchFace extends CanvasWatchFaceService {
                 GCBWatchFaceEngine engine = weakEngineReference.get();
                 if (engine != null) {
                     switch (msg.what) {
-                        case MSG_UPDATE_TIME:
+                        case MSG_UPDATE_TIME: {
                             engine.handleUpdateTimeMessage();
                             break;
+                        }
+                        case MSG_UPDATE_EVENT: {
+                            engine.updateEvent();
+                            break;
+                        }
                     }
                 }
             }
         }
-
         private final Handler engineHandler = new EngineHandler(this);
-
         private boolean registeredTimeZoneReceiver = false;
         private boolean ambientMode;
 
@@ -98,8 +96,6 @@ public class GCBWatchFace extends CanvasWatchFaceService {
          */
         private boolean lowBitAmbient;
         private boolean drawInEventMode = false;
-
-        private CompositeSubscription compositeSubscription;
 
         private ColorPalette colorPalette;
 
@@ -124,8 +120,9 @@ public class GCBWatchFace extends CanvasWatchFaceService {
         private PlaceholderDrawer placeholderDrawer;
 
         private EventFormatter eventFormatter;
+        private EventsManager eventsManager;
 
-        private final BroadcastReceiver timeZoneReceiver = new BroadcastReceiver() {
+        private BroadcastReceiver timeZoneReceiver = new BroadcastReceiver() {
             @Override
             public void onReceive(Context context, Intent intent) {
                 TimeZone timeZone = TimeZone.getTimeZone(intent.getStringExtra("time-zone"));
@@ -135,6 +132,18 @@ public class GCBWatchFace extends CanvasWatchFaceService {
                     hourDrawer.setTimeZone(timeZone);
                 }
                 formatterCalendar.setTimeZone(timeZone);
+            }
+        };
+
+        private EventsListChangeListener eventsListListener = new EventsListChangeListener() {
+            @Override
+            public void onEventsListChanged() {
+                updateEvent();
+            }
+
+            @Override
+            public void onEventsLoadFailure() {
+
             }
         };
 
@@ -149,29 +158,12 @@ public class GCBWatchFace extends CanvasWatchFaceService {
             initPaints();
             initRectangles();
             initDrawers(context);
-            RxWear.init(context);
-            compositeSubscription = new CompositeSubscription();
-            Log.d("WEAR", "Registered rxWear");
-            Subscription subscription = RxWear.Message.listen()
-                    .compose(MessageEventGetDataMap.filterByPath(CommunicationConfig.EVENTS_LIST_PATH))
-                    .subscribe(new Action1<DataMap>() {
-                        @Override
-                        public void call(DataMap dataMap) {
-                            String json = dataMap.getString(CommunicationConfig.EVENTS_LIST_DATA_KEY);
-                            Log.d("WATCH", "Received data: "+json);
-                            Gson gson = new Gson();
-                            Type eventListType = new TypeToken<List<Event>>() {
-                            }.getType();
-                            List<Event> events = gson.fromJson(json, eventListType);
-                            eventsLoaded(events);
-                        }
-                    }, new Action1<Throwable>() {
-                        @Override
-                        public void call(Throwable throwable) {
-                            throwable.printStackTrace();
-                        }
-                    });
-            compositeSubscription.add(subscription);
+            initAndRegisterEventsManager(context);
+        }
+
+        private void initAndRegisterEventsManager(Context context) {
+            eventsManager = new EventsManager(context);
+            eventsManager.registerMessageListener(eventsListListener);
         }
 
         private void initEventFormatter() {
@@ -201,10 +193,9 @@ public class GCBWatchFace extends CanvasWatchFaceService {
                     strokeSize,
                     MeasureUtil.getDimensionToPixel(getResources(), R.dimen.ovals_gap));
             placeholderDrawer = new PlaceholderDrawer(colorPalette, MeasureUtil.getDimensionToPixel(getResources(),
-                    R.dimen.permissions_not_granted), "nie", MeasureUtil.getDimensionToPixel
+                    R.dimen.permissions_not_granted), "No events loaded", MeasureUtil.getDimensionToPixel
                     (getResources(), R.dimen.inner_oval_stroke), strokeSize, MeasureUtil.getDimensionToPixel
                     (getResources(), R.dimen.ovals_gap));
-
         }
 
         private void initRectangles() {
@@ -238,7 +229,7 @@ public class GCBWatchFace extends CanvasWatchFaceService {
 
         @Override
         public void onDestroy() {
-            compositeSubscription.unsubscribe();
+            eventsManager.unregisterMessageListener();
             engineHandler.removeMessages(MSG_UPDATE_TIME);
             super.onDestroy();
         }
@@ -406,11 +397,19 @@ public class GCBWatchFace extends CanvasWatchFaceService {
             }
         }
 
-        public void eventsLoaded(List<Event> events) {
-            eventFormatter.setCalendarName(events.get(0).getCalendarDisplayName());
-            eventFormatter.setEvent(events.get(0));
+        public void updateEvent() {
+            Log.d("WATCH", "update event");
+            Optional<Event> upcomingEvent = eventsManager.getUpcomingEvent();
+            if(upcomingEvent.isPresent()) {
+                Event event = upcomingEvent.get();
+                eventFormatter.setEvent(event);
+                Log.d("WATCH", "set event "+event.getTitle());
+                long delay = event.getStartDate() - System.currentTimeMillis();
+                engineHandler.sendEmptyMessageDelayed(MSG_UPDATE_EVENT, delay);
+            } else {
+                eventFormatter.clearEvent();
+            }
             invalidate();
-            Log.d("WATCH", "events "+events);
         }
     }
 }

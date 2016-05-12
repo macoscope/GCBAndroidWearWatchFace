@@ -8,7 +8,6 @@ import com.macoscpoe.gcbmodel.Event;
 import java.util.Calendar;
 
 public class EventFormatter {
-    private String calendarName;
     private Calendar calendar;
     private Event event;
 
@@ -25,11 +24,7 @@ public class EventFormatter {
     }
 
     public String getCalendarName() {
-        return calendarName;
-    }
-
-    public void setCalendarName(String calendarName) {
-        this.calendarName = calendarName;
+        return event.getCalendarDisplayName();
     }
 
     public String getMinutesToEventString(Resources resources, long datePointTime) {
@@ -46,5 +41,7 @@ public class EventFormatter {
         return event != null && event.isValid();
     }
 
-
+    public void clearEvent() {
+        event = null;
+    }
 }
