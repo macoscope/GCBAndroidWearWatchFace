@@ -9,7 +9,10 @@ class EventSpock extends Specification {
         given:
         long now = System.currentTimeMillis()
         long timeAfter25minFromNow = now + TimeUnit.MINUTES.toMillis(25);
+        Event.TimeProvider timeProvider = Stub(Event.TimeProvider)
+        timeProvider.currentTime() >> now
         Event objectUnderTest = new Event(1L, timeAfter25minFromNow, "", "");
+        objectUnderTest.setTimeProvider(timeProvider)
         when:
         long minutesToEvent = objectUnderTest.getMinutesToEvent(now)
         then:
@@ -18,25 +21,37 @@ class EventSpock extends Specification {
 
     def "Event with startDate set to 1 minute from now should be valid"() {
         given:
-        long futureDate = System.currentTimeMillis() + TimeUnit.MINUTES.toMillis(1);
+        long now = System.currentTimeMillis();
+        long futureDate = now + TimeUnit.MINUTES.toMillis(1);
+        Event.TimeProvider timeProvider = Stub(Event.TimeProvider)
+        timeProvider.currentTime() >> now
         Event objectUnderTest = new Event(1L, futureDate, "", "");
-        then:
+        objectUnderTest.setTimeProvider(timeProvider)
+        expect:
         objectUnderTest.isValid()
     }
 
     def "Event should  be invalid if startDate is current date"() {
         given:
         long now = System.currentTimeMillis();
+        Event.TimeProvider timeProvider = Stub(Event.TimeProvider)
+        timeProvider.currentTime() >> now
         Event objectUnderTest = new Event(1L, now, "", "");
-        then:
+        objectUnderTest.setTimeProvider(timeProvider)
+        expect:
         !objectUnderTest.isValid()
     }
 
     def "Event should  be invalid if startDate is past date"() {
         given:
-        long past = System.currentTimeMillis() - 1;
+        long now = System.currentTimeMillis();
+        long past = now - 1;
+        Event.TimeProvider timeProvider = Stub(Event.TimeProvider)
+        timeProvider.currentTime() >> now
         Event objectUnderTest = new Event(1L, past, "", "");
-        then:
+        objectUnderTest.setTimeProvider(timeProvider)
+        expect:
         !objectUnderTest.isValid()
     }
+
 }
