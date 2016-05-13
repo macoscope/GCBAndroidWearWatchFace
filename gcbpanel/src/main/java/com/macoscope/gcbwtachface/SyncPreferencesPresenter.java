@@ -26,6 +26,7 @@ import com.patloew.rxwear.RxWear;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 import pub.devrel.easypermissions.AfterPermissionGranted;
 import pub.devrel.easypermissions.EasyPermissions;
@@ -56,6 +57,7 @@ public class SyncPreferencesPresenter {
     private CalendarUseCase calendarUseCase;
     //TODO handle unsubscribe
     private CompositeSubscription compositeSubscription;
+    private DummyEvents dummyEvents = new DummyEvents();
 
     /**
      * A preference value change listener that updates the preference's summary
@@ -91,13 +93,22 @@ public class SyncPreferencesPresenter {
 
     public SyncPreferencesPresenter(SyncPreferencesView syncPreferencesView, Context context,
                                     ListPreference syncFrequencyPreference, Preference accountPreference,
-                                    ListPreference calendarListPreference) {
+                                    ListPreference calendarListPreference, Preference snedTestEvents) {
         this.syncPreferencesView = syncPreferencesView;
         this.context = context;
         this.accountPreference = accountPreference;
         this.calendarListPreference = calendarListPreference;
         this.syncFrequencyPreference = syncFrequencyPreference;
         this.compositeSubscription = new CompositeSubscription();
+
+        snedTestEvents.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
+            @Override
+            public boolean onPreferenceClick(Preference preference) {
+                sendEvents(Optional.of(dummyEvents.getDummyEventsList(20, 1, TimeUnit.MINUTES, "KOPEREK")));
+                return true;
+            }
+        });
+
         RxWear.init(context);
         setBindPreferenceSummariesToValues();
         calendarListPreference.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {

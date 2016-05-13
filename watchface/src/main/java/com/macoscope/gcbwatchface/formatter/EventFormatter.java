@@ -29,7 +29,11 @@ public class EventFormatter {
 
     public String getMinutesToEventString(Resources resources, long datePointTime) {
         long minutes = event.getMinutesToEvent(datePointTime);
-        return resources.getQuantityString(R.plurals.minutes, (int) minutes, minutes);
+        if (minutes > 0) {
+            return resources.getQuantityString(R.plurals.minutes, (int) minutes, minutes);
+        } else {
+            return resources.getString(R.string.less_than_minute);
+        }
     }
 
     public int getHourMinutes() {
@@ -37,7 +41,7 @@ public class EventFormatter {
         return calendar.get(Calendar.MINUTE);
     }
 
-    public boolean hasValidEvent(){
+    public boolean hasValidEvent() {
         return event != null && event.isValid();
     }
 

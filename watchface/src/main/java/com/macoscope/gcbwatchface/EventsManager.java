@@ -2,6 +2,7 @@ package com.macoscope.gcbwatchface;
 
 
 import android.content.Context;
+import android.util.Log;
 
 import com.eccyan.optional.Optional;
 import com.google.android.gms.wearable.DataMap;
@@ -24,7 +25,8 @@ import rx.subscriptions.CompositeSubscription;
 public class EventsManager {
     private CompositeSubscription compositeSubscription;
     private Gson gson;
-    private Type eventListType = new TypeToken<List<Event>>(){}.getType();
+    private Type eventListType = new TypeToken<List<Event>>() {
+    }.getType();
     private List<Event> events;
 
     public EventsManager(Context context) {
@@ -41,6 +43,7 @@ public class EventsManager {
                     @Override
                     public List<Event> call(DataMap dataMap) {
                         String json = dataMap.getString(CommunicationConfig.EVENTS_LIST_DATA_KEY);
+                        Log.d("WATCH", "received " + json);
                         return gson.fromJson(json, eventListType);
                     }
                 })

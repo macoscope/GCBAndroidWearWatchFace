@@ -36,7 +36,7 @@ public class PlaceholderDrawer implements Drawer {
     public void draw(Canvas canvas, float boundsWidth, float centerX, float centerY) {
         if (staticLayout == null) {
             layoutWidth = (int) ((boundsWidth - ovalsSummaryGap) / Math.sqrt(2));
-            staticLayout = new StaticLayout(permissions, textPaint, layoutWidth, Layout.Alignment.ALIGN_CENTER, 1, 0,
+            staticLayout = new StaticLayout(permissions, textPaint, layoutWidth, Layout.Alignment.ALIGN_NORMAL, 1, 0,
                     false);
         }
         canvas.save();

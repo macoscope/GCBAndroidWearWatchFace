@@ -30,7 +30,6 @@ import com.macoscpoe.gcbmodel.Event;
 import java.lang.ref.WeakReference;
 import java.util.Calendar;
 import java.util.GregorianCalendar;
-import java.util.List;
 import java.util.TimeZone;
 
 /**

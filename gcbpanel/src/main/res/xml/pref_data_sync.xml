@@ -22,10 +22,9 @@
         android:positiveButtonText="@null"
         android:title="@string/pref_title_calendar"/>
 
-    <!-- This preference simply launches an intent when selected. Use this UI sparingly, per
-     design guidelines. -->
-    <Preference android:title="TEST">
-        <intent
-            android:action="com.macoscope.gcbpanel.action.calendar.test"/>
-    </Preference>
+    <Preference
+        android:key="pref_dummy_events"
+        android:summary="Send dummy events"
+        android:title="TEST"/>
+
 </PreferenceScreen>

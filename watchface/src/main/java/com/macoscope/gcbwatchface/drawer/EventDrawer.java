@@ -110,13 +110,13 @@ public class EventDrawer implements Drawer {
         startInMinutesHeight = textBounds.height();
     }
 
-    public void draw(EventFormatter eventViewModel, Canvas canvas, float radius, float centerX, float centerY,
+    public void draw(EventFormatter eventFormatter, Canvas canvas, float radius, float centerX, float centerY,
                      long timeInMillis) {
-        if(eventViewModel.hasValidEvent()) {
-            drawEventName(canvas, bitmapPaint, radius, eventViewModel.getName(), centerX, centerY);
-            drawEventCalendarName(canvas, bitmapPaint, radius, eventViewModel.getCalendarName(), centerX, centerY);
+        if(eventFormatter.hasValidEvent()) {
+            drawEventName(canvas, bitmapPaint, radius, eventFormatter.getName(), centerX, centerY);
+            drawEventCalendarName(canvas, bitmapPaint, radius, eventFormatter.getCalendarName(), centerX, centerY);
             canvas.drawText(startsIn, centerX, centerY + startsInHeight, startsInTextPaint);
-            canvas.drawText(eventViewModel.getMinutesToEventString(resources, timeInMillis), centerX, centerY +
+            canvas.drawText(eventFormatter.getMinutesToEventString(resources, timeInMillis), centerX, centerY +
                     startsInHeight + startInMinutesPadding + startInMinutesHeight, minutesTextPaint);
         }
     }

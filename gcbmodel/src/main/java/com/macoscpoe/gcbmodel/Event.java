@@ -7,8 +7,7 @@ public class Event {
     private long startDate;
     private String title;
     private String calendarDisplayName;
-
-    private TimeProvider timeProvider;
+    private transient TimeProvider timeProvider;
 
     public long getId() {
         return id;
@@ -44,6 +43,10 @@ public class Event {
 
     public void setCalendarDisplayName(String calendarDisplayName) {
         this.calendarDisplayName = calendarDisplayName;
+    }
+
+    public Event() {
+        this.timeProvider = new TimeProvider();
     }
 
     public Event(long id, long startDate, String title, String calendarDisplayName) {

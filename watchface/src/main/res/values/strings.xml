@@ -5,4 +5,5 @@
     <string name="calendar_permission_text">GCBWatchFace requires Calendar access.</string>
     <string name="calendar_permission_not_approved">WatchFace Requires Calendar permission. Long press or visit Permissions
         Settings</string>
+    <string name="less_than_minute">less than a minute</string>
 </resources>
