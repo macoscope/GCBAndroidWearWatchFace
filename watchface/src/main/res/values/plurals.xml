@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <plurals name="minutes">
+        <item quantity="zero">less than a minute</item>
         <item quantity="one">a minute</item>
         <item quantity="other">%d minutes</item>
     </plurals>
