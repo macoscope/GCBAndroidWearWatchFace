@@ -30,6 +30,8 @@ dependencies {
     compile 'com.github.macoscope:RxJava-Optional:e5349bff43'
     compile 'com.google.code.gson:gson:2.6.2'
     compile 'com.patloew.rxwear:rxwear:1.1.0'
+    compile 'com.evernote:android-job:1.0.5'
+
     compile('com.google.api-client:google-api-client-android:1.20.0') {
         exclude group: 'org.apache.httpcomponents'
     }

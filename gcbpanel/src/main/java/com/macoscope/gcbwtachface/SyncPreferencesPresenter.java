@@ -9,7 +9,6 @@ import android.preference.ListPreference;
 import android.preference.Preference;
 import android.preference.PreferenceManager;
 import android.text.TextUtils;
-import android.util.Log;
 import android.util.Pair;
 
 import com.eccyan.optional.Optional;
@@ -18,15 +17,9 @@ import com.google.android.gms.common.GoogleApiAvailability;
 import com.google.api.client.googleapis.extensions.android.gms.auth.GoogleAccountCredential;
 import com.google.api.client.util.ExponentialBackOff;
 import com.google.api.services.calendar.CalendarScopes;
-import com.google.gson.Gson;
-import com.macoscpoe.gcbmodel.CommunicationConfig;
-import com.macoscpoe.gcbmodel.Event;
-import com.patloew.rxwear.GoogleAPIConnectionException;
-import com.patloew.rxwear.RxWear;
+import com.macoscope.gcbwtachface.service.SyncJobScheduler;
 
 import java.util.Arrays;
-import java.util.List;
-import java.util.concurrent.TimeUnit;
 
 import pub.devrel.easypermissions.AfterPermissionGranted;
 import pub.devrel.easypermissions.EasyPermissions;
@@ -40,10 +33,12 @@ import static android.app.Activity.RESULT_OK;
 
 public class SyncPreferencesPresenter {
 
-    static final int REQUEST_ACCOUNT_PICKER = 1000;
-    static final int REQUEST_GOOGLE_PLAY_SERVICES = 1002;
-    static final int REQUEST_PERMISSION_GET_ACCOUNTS = 1003;
-    static final int REQUEST_PERMISSION_READ_CALENDAR = 1004;
+    static final int REQUEST_ACCOUNT_PICKER = 100;
+    static final int REQUEST_GOOGLE_PLAY_SERVICES = 101;
+    static final int REQUEST_PERMISSION_GET_ACCOUNTS = 102;
+    static final int REQUEST_PERMISSION_READ_CALENDAR = 103;
+
+    private static final String DEFAULT_SYNC_INTERVAL_MINUTES = "55";
 
     private static final String[] SCOPES = {CalendarScopes.CALENDAR_READONLY};
     private static final CharSequence[] EMPTY_CHARS_ARRAY = new CharSequence[]{};
@@ -57,7 +52,7 @@ public class SyncPreferencesPresenter {
     private CalendarUseCase calendarUseCase;
     //TODO handle unsubscribe
     private CompositeSubscription compositeSubscription;
-    private DummyEvents dummyEvents = new DummyEvents();
+    private SyncJobScheduler syncJobScheduler;
 
     /**
      * A preference value change listener that updates the preference's summary
@@ -92,24 +87,16 @@ public class SyncPreferencesPresenter {
             };
 
     public SyncPreferencesPresenter(SyncPreferencesView syncPreferencesView, Context context,
-                                    ListPreference syncFrequencyPreference, Preference accountPreference,
-                                    ListPreference calendarListPreference, Preference snedTestEvents) {
+                                    final ListPreference syncFrequencyPreference, Preference accountPreference,
+                                    ListPreference calendarListPreference) {
         this.syncPreferencesView = syncPreferencesView;
         this.context = context;
         this.accountPreference = accountPreference;
         this.calendarListPreference = calendarListPreference;
         this.syncFrequencyPreference = syncFrequencyPreference;
         this.compositeSubscription = new CompositeSubscription();
+        this.syncJobScheduler = new SyncJobScheduler();
 
-        snedTestEvents.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
-            @Override
-            public boolean onPreferenceClick(Preference preference) {
-                sendEvents(Optional.of(dummyEvents.getDummyEventsList(20, 1, TimeUnit.MINUTES, "KOPEREK")));
-                return true;
-            }
-        });
-
-        RxWear.init(context);
         setBindPreferenceSummariesToValues();
         calendarListPreference.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
             @Override
@@ -126,9 +113,9 @@ public class SyncPreferencesPresenter {
                         index >= 0
                                 ? listPreference.getEntries()[index]
                                 : null);
-                if(index >= 0) {
+                if (index >= 0) {
                     long calendarId = Long.parseLong(listPreference.getEntryValues()[index].toString());
-                    loadEvents(calendarId, 55);
+                    scheduleJob(calendarId);
                 }
 
                 return true;
@@ -140,57 +127,12 @@ public class SyncPreferencesPresenter {
         setAccountPreferenceClickListener(accountPreference);
     }
 
-    private void loadEvents(long calendarId, long minutesInterval) {
-        Subscription subscription = calendarUseCase.getEvents(calendarId, minutesInterval)
-                .subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(new Action1<Optional<List<Event>>>() {
-                    @Override
-                    public void call(Optional<List<Event>> listOptional) {
-                        showEvents(listOptional);
-                        sendEvents(listOptional);
-                    }
-                });
-        compositeSubscription.add(subscription);
-    }
-
-
-    private void showEvents(Optional<List<Event>> listOptional){
-        if(listOptional.isPresent() && listOptional.get().size() > 0){
-            String string = "";
-            for(int i=0; i< listOptional.get().size(); i++){
-                string += listOptional.get().get(i).getTitle()+ "\n";
-            }
-            syncPreferencesView.showMessage(string);
-        } else {
-            syncPreferencesView.showMessage("No events in 55min for selected calendar");
-        }
-    }
-
-    private void sendEvents(Optional<List<Event>> listOptional){
-        if(listOptional.isPresent() && listOptional.get().size() > 0){
-            Gson gson = new Gson();
-            final String eventsGson = gson.toJson(listOptional.get());
-            Subscription subscription = RxWear.Message.SendDataMap.toAllRemoteNodes(CommunicationConfig.EVENTS_LIST_PATH)
-                    .putString(CommunicationConfig.EVENTS_LIST_DATA_KEY, eventsGson)
-                    .toObservable().subscribe(new Action1<Integer>() {
-                @Override
-                public void call(Integer integer) {
-                    Log.d("MOBILE", "SEND: "+eventsGson);
-                    syncPreferencesView.showMessage("Events send");
-                }
-            }, new Action1<Throwable>() {
-                @Override
-                public void call(Throwable throwable) {
-                    if(throwable instanceof GoogleAPIConnectionException) {
-                       syncPreferencesView.showMessage("Android Wear app is not installed");
-                    } else {
-                        syncPreferencesView.showMessage("Could not send message");
-                    }
-                }
-            });
-            compositeSubscription.add(subscription);
-        }
+    private void scheduleJob(long calendarId) {
+        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(syncFrequencyPreference
+                .getContext());
+        long timeInMinutes = Long.parseLong(sharedPreferences.getString(syncFrequencyPreference.getKey(),
+                DEFAULT_SYNC_INTERVAL_MINUTES));
+        syncJobScheduler.scheduleNewSyncJob(timeInMinutes, calendarId);
     }
 
     private void setBindPreferenceSummariesToValues() {
@@ -396,6 +338,7 @@ public class SyncPreferencesPresenter {
     }
 
     private void clearCalendarsPreference() {
+        syncJobScheduler.cancelAllScheduledJobs();
         setCalendarsPreference(EMPTY_CHARS_ARRAY, EMPTY_CHARS_ARRAY);
         SharedPreferences.Editor editor = PreferenceManager.getDefaultSharedPreferences(calendarListPreference
                 .getContext())

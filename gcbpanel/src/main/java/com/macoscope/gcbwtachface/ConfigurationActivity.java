@@ -2,10 +2,11 @@ package com.macoscope.gcbwtachface;
 
 
 import android.os.Bundle;
+import android.preference.PreferenceActivity;
 import android.support.v7.app.AppCompatActivity;
 
 
-public class ConfigurationActivity extends AppCompatActivity {
+public class ConfigurationActivity extends PreferenceActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {

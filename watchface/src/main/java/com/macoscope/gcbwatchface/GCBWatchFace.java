@@ -15,7 +15,6 @@ import android.os.Handler;
 import android.os.Message;
 import android.support.wearable.watchface.CanvasWatchFaceService;
 import android.support.wearable.watchface.WatchFaceStyle;
-import android.util.Log;
 import android.view.SurfaceHolder;
 
 import com.eccyan.optional.Optional;
@@ -397,12 +396,10 @@ public class GCBWatchFace extends CanvasWatchFaceService {
         }
 
         public void updateEvent() {
-            Log.d("WATCH", "update event");
             Optional<Event> upcomingEvent = eventsManager.getUpcomingEvent();
             if(upcomingEvent.isPresent()) {
                 Event event = upcomingEvent.get();
                 eventFormatter.setEvent(event);
-                Log.d("WATCH", "set event "+event.getTitle());
                 long delay = event.getStartDate() - System.currentTimeMillis();
                 engineHandler.sendEmptyMessageDelayed(MSG_UPDATE_EVENT, delay);
             } else {

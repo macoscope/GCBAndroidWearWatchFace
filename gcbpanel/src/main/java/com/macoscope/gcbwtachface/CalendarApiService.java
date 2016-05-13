@@ -1,6 +1,5 @@
 package com.macoscope.gcbwtachface;
 
-import com.eccyan.optional.Optional;
 import com.google.api.client.extensions.android.http.AndroidHttp;
 import com.google.api.client.googleapis.extensions.android.gms.auth.GoogleAccountCredential;
 import com.google.api.client.http.HttpTransport;
@@ -30,15 +29,15 @@ public class CalendarApiService {
     /**
      * Fetch a list of calendars for given user.
      */
-    public Optional<CalendarList> getCalendars() throws IOException {
+    public CalendarList getCalendars() throws IOException {
         CalendarList calendarList = calendarService.calendarList().list().execute();
-        return Optional.of(calendarList);
+        return calendarList;
     }
 
     /**
      * Fetch a list of the next events from the specific calendar.
      */
-    public Optional<Events> getEvents(String calendarId, int maxResults) throws IOException {
+    public Events getEvents(String calendarId, int maxResults) throws IOException {
         DateTime now = new DateTime(System.currentTimeMillis());
         Events events = calendarService.events().list(calendarId)
                 .setMaxResults(maxResults)
@@ -46,6 +45,6 @@ public class CalendarApiService {
                 .setOrderBy(DEFAULT_ORDER_BY)
                 .setSingleEvents(true)
                 .execute();
-        return Optional.of(events);
+        return events;
     }
 }

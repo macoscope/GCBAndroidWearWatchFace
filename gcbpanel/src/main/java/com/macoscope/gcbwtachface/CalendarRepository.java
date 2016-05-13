@@ -18,8 +18,8 @@ public class CalendarRepository {
 
     // Projection array. Creating indices for this array instead of doing  dynamic lookups improves performance.
     private static final String[] CALENDAR_PROJECTION = new String[]{
-            Calendars._ID,                           // 0
-            Calendars.CALENDAR_DISPLAY_NAME          // 1
+            Calendars._ID,
+            Calendars.CALENDAR_DISPLAY_NAME
     };
 
     private static final String CALENDAR_SELECTION = Calendars._ID + " = ?";
@@ -31,9 +31,9 @@ public class CalendarRepository {
     private static final int PROJECTION_CALENDAR_DISPLAY_NAME_INDEX = 1;
 
     private static final String[] INSTANCE_PROJECTION = new String[]{
-            Instances.EVENT_ID,      // 0
-            Instances.BEGIN,         // 1
-            Instances.TITLE          // 2
+            Instances.EVENT_ID,
+            Instances.BEGIN,
+            Instances.TITLE
     };
 
     // The indices for the projection array above.
@@ -85,7 +85,7 @@ public class CalendarRepository {
         ContentUris.appendId(builder, now + timeUnit.toMillis(timeInterval));
 
         Cursor cursor = contentResolver.query(builder.build(), INSTANCE_PROJECTION,
-                INSTANCE_SELECTION, new String[]{Long.toString(calendarId)}, null /* sortOrder */);
+                INSTANCE_SELECTION, new String[]{Long.toString(calendarId)}, null);
 
         List<Event> events = new ArrayList<>(cursor.getCount());
         while (cursor.moveToNext()) {

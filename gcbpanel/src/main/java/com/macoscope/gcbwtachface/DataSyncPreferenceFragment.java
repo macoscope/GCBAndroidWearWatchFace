@@ -23,7 +23,7 @@ public class DataSyncPreferenceFragment extends PreferenceFragment implements Sy
         Preference accountPreference = findPreference(getString(R.string.pref_key_sync_account));
         ListPreference calendarPreferenceList = (ListPreference) findPreference(getString(R.string.pref_key_sync_calendar));
         syncPreferencesPresenter = new SyncPreferencesPresenter(this, getActivity(), syncFrequency, accountPreference,
-                calendarPreferenceList, findPreference("pref_dummy_events"));
+                calendarPreferenceList);
     }
 
     @Override
