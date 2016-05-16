@@ -32,6 +32,12 @@ public class DataSyncPreferenceFragment extends PreferenceFragment implements Sy
         syncPreferencesPresenter.onActivityResult(requestCode, resultCode, data);
     }
 
+    @Override
+    public void onDestroyView() {
+        super.onDestroyView();
+        syncPreferencesPresenter.onDestroy();
+    }
+
     /**
      * Display an error dialog showing that Google Play Services is missing
      * or out of date.
@@ -49,8 +55,7 @@ public class DataSyncPreferenceFragment extends PreferenceFragment implements Sy
     }
 
     public void showMessage(String message) {
-        View view = getView();
-        Snackbar.make(view, message, Snackbar.LENGTH_LONG).show();
+        Snackbar.make(getView(), message, Snackbar.LENGTH_LONG).show();
     }
 
     @Override

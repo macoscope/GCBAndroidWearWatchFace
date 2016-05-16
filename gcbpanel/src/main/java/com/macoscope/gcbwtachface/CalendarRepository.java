@@ -44,6 +44,8 @@ public class CalendarRepository {
     private static final String INSTANCE_SELECTION = Instances.CALENDAR_ID + " = ?" +
             " AND " + Instances.ALL_DAY + " =0";
 
+    private static final String INSTANCE_ORDER = Instances.BEGIN + " ASC";
+
     private ContentResolver contentResolver;
 
     public CalendarRepository(ContentResolver contentResolver) {
@@ -85,7 +87,7 @@ public class CalendarRepository {
         ContentUris.appendId(builder, now + timeUnit.toMillis(timeInterval));
 
         Cursor cursor = contentResolver.query(builder.build(), INSTANCE_PROJECTION,
-                INSTANCE_SELECTION, new String[]{Long.toString(calendarId)}, null);
+                INSTANCE_SELECTION, new String[]{Long.toString(calendarId)}, INSTANCE_ORDER);
 
         List<Event> events = new ArrayList<>(cursor.getCount());
         while (cursor.moveToNext()) {
