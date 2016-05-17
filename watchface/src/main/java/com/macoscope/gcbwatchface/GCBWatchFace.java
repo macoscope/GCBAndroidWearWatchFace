@@ -84,6 +84,7 @@ public class GCBWatchFace extends CanvasWatchFaceService {
                 }
             }
         }
+
         private final Handler engineHandler = new EngineHandler(this);
         private boolean registeredTimeZoneReceiver = false;
         private boolean ambientMode;
@@ -104,10 +105,12 @@ public class GCBWatchFace extends CanvasWatchFaceService {
 
         private RectF outerOval;
         private RectF innerOval;
-        private RectF arcRect;
 
         private float strokeSize;
+        private float innerStrokeSize;
         private float padding;
+        private float innerOvalRadius;
+        private float bitmapOffset;
 
         private Typeface typefaceLight;
 
@@ -175,8 +178,9 @@ public class GCBWatchFace extends CanvasWatchFaceService {
             colorPalette = new ColorPalette(context);
 
             strokeSize = MeasureUtil.getDimensionToPixel(getResources(), R.dimen.outside_oval_stroke);
+            innerStrokeSize = MeasureUtil.getDimensionToPixel(getResources(), R.dimen.inner_oval_stroke);
             padding = MeasureUtil.getDimensionToPixel(getResources(), R.dimen.face_padding);
-
+            bitmapOffset = padding - strokeSize;
             typefaceLight = Typeface.create(MINUTES_FONT_FAMILY, Typeface.NORMAL);
             if (typefaceLight == null) {
                 typefaceLight = Typeface.DEFAULT;
@@ -184,7 +188,6 @@ public class GCBWatchFace extends CanvasWatchFaceService {
 
             noUpcomingEvents = getString(R.string.placeholder_no_events);
             eventsLoadingError = getString(R.string.placeholder_events_error);
-
         }
 
         private void initDrawers(Context context) {
@@ -192,10 +195,7 @@ public class GCBWatchFace extends CanvasWatchFaceService {
                     R.dimen.hour_text_size));
             eventDrawer = new EventDrawer(context, typefaceLight, colorPalette, bitmapPaint);
             faceDrawer = new FaceDrawer(colorPalette, padding, strokeSize);
-            indicatorDrawer = new EventIndicatorDrawer(colorPalette,
-                    MeasureUtil.getDimensionToPixel(getResources(), R.dimen.inner_oval_stroke),
-                    strokeSize,
-                    MeasureUtil.getDimensionToPixel(getResources(), R.dimen.ovals_gap));
+            indicatorDrawer = new EventIndicatorDrawer(colorPalette, innerStrokeSize);
             placeholderDrawer = new PlaceholderDrawer(colorPalette, MeasureUtil.getDimensionToPixel(getResources(),
                     R.dimen.permissions_not_granted), noUpcomingEvents, MeasureUtil.getDimensionToPixel
                     (getResources(), R.dimen.inner_oval_stroke), strokeSize, MeasureUtil.getDimensionToPixel
@@ -204,7 +204,6 @@ public class GCBWatchFace extends CanvasWatchFaceService {
 
         private void initRectangles() {
             outerOval = new RectF();
-            arcRect = new RectF();
             innerOval = new RectF();
         }
 
@@ -306,37 +305,48 @@ public class GCBWatchFace extends CanvasWatchFaceService {
 
             if (drawInEventMode) {
                 if (eventFormatter.hasValidEvent()) {
-                    eventDrawer.draw(eventFormatter, canvas, innerOval.width() / 2, centerX, centerY, time.getTimeInMillis());
+                    eventDrawer.draw(eventFormatter, canvas, innerOvalRadius, centerX, centerY, time.getTimeInMillis());
                 } else {
                     placeholderDrawer.draw(canvas, bounds.width(), centerX, centerY);
                 }
             } else {
                 hourDrawer.draw(canvas, time, centerX, centerY);
             }
-            faceDrawer.draw(faceBitmap, outerOval, arcRect, bounds.width(), bounds.height(), minutes);
+
+            faceDrawer.draw(minutes);
+
             if (eventFormatter.hasValidEvent()) {
-                indicatorDrawer.draw(faceBitmap, eventFormatter.getHourMinutes(), outerOval, innerOval, arcRect);
+                indicatorDrawer.draw(eventFormatter.getHourMinutes());
             } else {
-                indicatorDrawer.clearIndication(faceBitmap, outerOval, arcRect);
+                indicatorDrawer.clearIndication();
             }
-
-            canvas.drawBitmap(faceBitmap, padding - strokeSize, padding - strokeSize, bitmapPaint);
-
+            canvas.drawBitmap(faceBitmap, bitmapOffset, bitmapOffset, bitmapPaint);
         }
 
         @Override
         public void onSurfaceChanged(SurfaceHolder holder, int format, int width, int height) {
             super.onSurfaceChanged(holder, format, width, height);
             initWatchFaceBitmap(width, height, strokeSize);
+            faceDrawer.measure(faceBitmap, outerOval, width, height);
+            setInnerOval(outerOval);
+            innerOvalRadius = innerOval.width() / 2;
+            indicatorDrawer.measure(faceBitmap, innerOval);
+        }
 
+        private void setInnerOval(RectF outerOval){
+            int ovalsGap = MeasureUtil.getDimensionToPixel(getResources(), R.dimen.ovals_gap);
+            float ovalsPadding = innerStrokeSize / 2 + ovalsGap + strokeSize / 2;
+            innerOval.set(outerOval.left + ovalsPadding, outerOval.top + ovalsPadding, outerOval.right - ovalsPadding,
+                    outerOval.bottom - ovalsPadding);
         }
 
         private void initWatchFaceBitmap(int boundsWidth, int boundHeight, float stroke) {
             int width = (int) (boundsWidth - padding * 2 + stroke * 2);
             int height = (int) (boundHeight - padding * 2 + stroke * 2);
-            if (faceBitmap == null) {
-                faceBitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
+            if (faceBitmap != null) {
+                faceBitmap.recycle();
             }
+            faceBitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
         }
 
         @Override
@@ -413,7 +423,7 @@ public class GCBWatchFace extends CanvasWatchFaceService {
 
         private void updateEvent() {
             Optional<Event> upcomingEvent = eventsManager.getUpcomingEvent();
-            if(upcomingEvent.isPresent()) {
+            if (upcomingEvent.isPresent()) {
                 Event event = upcomingEvent.get();
                 eventFormatter.setEvent(event);
                 long delay = event.getStartDate() - System.currentTimeMillis();

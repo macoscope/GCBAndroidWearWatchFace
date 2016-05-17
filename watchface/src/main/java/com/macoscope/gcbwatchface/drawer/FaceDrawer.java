@@ -23,8 +23,13 @@ public class FaceDrawer implements Drawer {
     private ColorPalette colorPalette;
     private Paint gradientPaint;
     private Paint arcPaint;
+    private RectF oval;
+    private RectF arcRect;
     private float padding;
     private float stroke;
+    private float centerX;
+    private float centerY;
+    private float ovalRotation;
 
     public FaceDrawer(ColorPalette colorPalette, float padding, float strokeSize) {
         this.padding = padding;
@@ -49,38 +54,34 @@ public class FaceDrawer implements Drawer {
         arcPaint.setXfermode(new PorterDuffXfermode(PorterDuff.Mode.SRC_ATOP));
     }
 
-    public void draw(Bitmap faceBitmap, RectF oval, RectF arcRect, float boundsWidth, float boundsHeight, int
-            minutes) {
-        int width = (int) (boundsWidth - padding * 2 + stroke * 2);
-        int height = (int) (boundsHeight - padding * 2 + stroke * 2);
-        float centerX = width / 2;
-        float centerY = height / 2;
+    public void measure(Bitmap faceBitmap, RectF outerOval, int width, int height) {
+        float ovalWidth = width - padding * 2 + stroke * 2;
+        float ovalHeight = height - padding * 2 + stroke * 2;
+        centerX = ovalWidth / 2;
+        centerY = ovalHeight / 2;
 
-        if (faceCanvas == null) {
-            faceCanvas = new Canvas(faceBitmap);
-        }
+        oval = outerOval;
 
-        if (gradientPaint.getShader() == null) {
-            gradientPaint.setShader(new SweepGradient(centerX, centerY, colorPalette.ovalGradient,
-                    OVAL_GRADIENT_POSITION));
-        }
+        faceCanvas = new Canvas(faceBitmap);
 
-        oval.set(stroke, stroke, width - stroke, height - stroke);
-        float piece = (float) (Math.PI * oval.width() / 12);
+        gradientPaint.setShader(new SweepGradient(centerX, centerY, colorPalette.ovalGradient, OVAL_GRADIENT_POSITION));
+
+        outerOval.set(stroke, stroke, ovalWidth - stroke, ovalHeight - stroke);
+
+        float piece = (float) (Math.PI * outerOval.width() / 12);
         float gap = MeasureUtil.PIECES_GAP;
-        if (gradientPaint.getPathEffect() == null) {
-            gradientPaint.setPathEffect(PathEffectUtil.getDashedStrokeEffect(piece, gap));
-        }
+        gradientPaint.setPathEffect(PathEffectUtil.getDashedStrokeEffect(piece, gap));
         //count rotation to have gaps in dashed stroke on hours place
-        float ovalRotation = (gap / 2 * 30) / piece - 90;
+        ovalRotation = (gap / 2 * 30) / piece - 90;
 
+        arcRect = new RectF(oval.left - padding, oval.top - padding, oval.right + padding, oval.bottom  + padding);
+    }
+
+    public void draw(int minutes) {
         faceCanvas.save();
         faceCanvas.rotate(ovalRotation, centerX, centerY);
         faceCanvas.drawOval(oval, gradientPaint);
         faceCanvas.restore();
-
-        arcRect.set(oval.left - padding, oval.top - padding, oval.right + padding, oval.bottom
-                + padding);
         faceCanvas.drawArc(arcRect, -90, getSwapAngle(minutes), true, arcPaint);
     }
     //TODO Test it
