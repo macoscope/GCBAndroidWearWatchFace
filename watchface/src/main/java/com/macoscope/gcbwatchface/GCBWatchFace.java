@@ -229,6 +229,7 @@ public class GCBWatchFace extends CanvasWatchFaceService {
         private void initBitmapPaint() {
             bitmapPaint = new Paint();
             bitmapPaint.setAntiAlias(true);
+            bitmapPaint.setFilterBitmap(true);
         }
 
         @Override
