@@ -120,6 +120,9 @@ public class GCBWatchFace extends CanvasWatchFaceService {
         private EventFormatter eventFormatter;
         private EventsManager eventsManager;
 
+        private String noUpcomingEvents;
+        private String eventsLoadingError;
+
         private BroadcastReceiver timeZoneReceiver = new BroadcastReceiver() {
             @Override
             public void onReceive(Context context, Intent intent) {
@@ -141,7 +144,7 @@ public class GCBWatchFace extends CanvasWatchFaceService {
 
             @Override
             public void onEventsLoadFailure() {
-
+                handleEventLoadingError();
             }
         };
 
@@ -179,6 +182,9 @@ public class GCBWatchFace extends CanvasWatchFaceService {
                 typefaceLight = Typeface.DEFAULT;
             }
 
+            noUpcomingEvents = getString(R.string.placeholder_no_events);
+            eventsLoadingError = getString(R.string.placeholder_events_error);
+
         }
 
         private void initDrawers(Context context) {
@@ -191,7 +197,7 @@ public class GCBWatchFace extends CanvasWatchFaceService {
                     strokeSize,
                     MeasureUtil.getDimensionToPixel(getResources(), R.dimen.ovals_gap));
             placeholderDrawer = new PlaceholderDrawer(colorPalette, MeasureUtil.getDimensionToPixel(getResources(),
-                    R.dimen.permissions_not_granted), "No events loaded", MeasureUtil.getDimensionToPixel
+                    R.dimen.permissions_not_granted), noUpcomingEvents, MeasureUtil.getDimensionToPixel
                     (getResources(), R.dimen.inner_oval_stroke), strokeSize, MeasureUtil.getDimensionToPixel
                     (getResources(), R.dimen.ovals_gap));
         }
@@ -397,7 +403,7 @@ public class GCBWatchFace extends CanvasWatchFaceService {
             }
         }
 
-        public void updateEvent() {
+        private void updateEvent() {
             Optional<Event> upcomingEvent = eventsManager.getUpcomingEvent();
             if(upcomingEvent.isPresent()) {
                 Event event = upcomingEvent.get();
@@ -405,8 +411,15 @@ public class GCBWatchFace extends CanvasWatchFaceService {
                 long delay = event.getStartDate() - System.currentTimeMillis();
                 engineHandler.sendEmptyMessageDelayed(MSG_UPDATE_EVENT, delay);
             } else {
+                placeholderDrawer.setMessage(noUpcomingEvents);
                 eventFormatter.clearEvent();
             }
+            invalidate();
+        }
+
+        private void handleEventLoadingError() {
+            placeholderDrawer.setMessage(eventsLoadingError);
+            eventFormatter.clearEvent();
             invalidate();
         }
     }

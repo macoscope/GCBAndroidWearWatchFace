@@ -13,16 +13,22 @@ public class PlaceholderDrawer implements Drawer {
     private ColorPalette colorPalette;
     private float ovalsSummaryGap;
     private TextPaint textPaint;
-    private String permissions;
+    private String message;
     private StaticLayout staticLayout;
-    private int layoutWidth;
+    private int layoutWidth = -1;
+    private boolean needNewStaticLayout = true;
 
-    public PlaceholderDrawer(ColorPalette colorPalette, float textSize, String permissions, float innerStrokeSize, float outerStroke, float
-            ovalsGap) {
+    public PlaceholderDrawer(ColorPalette colorPalette, float textSize, String message, float innerStrokeSize,
+                             float outerStroke, float ovalsGap) {
         this.colorPalette = colorPalette;
         this.ovalsSummaryGap = 2 * innerStrokeSize + 2 * outerStroke + 2 * ovalsGap;
         initTextPaint(textSize);
-        this.permissions = permissions;
+        this.message = message;
+    }
+
+    public void setMessage(String message) {
+        this.message = message;
+        needNewStaticLayout = !message.equals(this.message);
     }
 
     private void initTextPaint(float textSize) {
@@ -33,11 +39,18 @@ public class PlaceholderDrawer implements Drawer {
         textPaint.setColor(colorPalette.colorWhite);
     }
 
-    public void draw(Canvas canvas, float boundsWidth, float centerX, float centerY) {
-        if (staticLayout == null) {
+    private int getLayoutWidth(float boundsWidth) {
+        if (layoutWidth == -1) {
             layoutWidth = (int) ((boundsWidth - ovalsSummaryGap) / Math.sqrt(2));
-            staticLayout = new StaticLayout(permissions, textPaint, layoutWidth, Layout.Alignment.ALIGN_NORMAL, 1, 0,
-                    false);
+        }
+        return layoutWidth;
+    }
+
+    public void draw(Canvas canvas, float boundsWidth, float centerX, float centerY) {
+        if (needNewStaticLayout) {
+            staticLayout = new StaticLayout(message, textPaint, getLayoutWidth(boundsWidth),
+                    Layout.Alignment.ALIGN_NORMAL, 1, 0, false);
+            needNewStaticLayout = false;
         }
         canvas.save();
         canvas.translate(centerX, centerY - staticLayout.getHeight() / 2);
