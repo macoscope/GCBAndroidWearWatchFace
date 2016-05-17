@@ -24,7 +24,6 @@ public class SyncJob extends Job {
     public static final String KEY_CALENDAR_ID = "calendarId";
     public static final String KEY_MINUTES = "minutes";
     private Gson gson;
-
     private CalendarRepository calendarRepository;
 
     @NonNull
@@ -34,8 +33,6 @@ public class SyncJob extends Job {
         PersistableBundleCompat extras = params.getExtras();
         long calendarId = extras.getLong(KEY_CALENDAR_ID, -1);
         long minutes = extras.getLong(KEY_MINUTES, -1);
-
-        Log.e(TAG, "onRunJob cid: "+calendarId+" min: "+minutes);
 
         if (!isCanceled()) {
             calendarRepository = new CalendarRepository(getContext().getContentResolver());
@@ -50,21 +47,21 @@ public class SyncJob extends Job {
     private void sendEvents(List<Event> eventList) {
         RxWear.init(getContext());
         gson = new Gson();
-        final String eventsGson = gson.toJson(eventList);
+        final String eventsJson = gson.toJson(eventList);
         RxWear.Message.SendDataMap.toAllRemoteNodes(CommunicationConfig.EVENTS_LIST_PATH)
-                .putString(CommunicationConfig.EVENTS_LIST_DATA_KEY, eventsGson)
+                .putString(CommunicationConfig.EVENTS_LIST_DATA_KEY, eventsJson)
                 .toObservable().subscribe(new Action1<Integer>() {
             @Override
             public void call(Integer integer) {
-                Log.d(TAG, "SEND: " + eventsGson);
+                Log.d(getParams().getTag(), "JSON send to watch: " + eventsJson);
             }
         }, new Action1<Throwable>() {
             @Override
             public void call(Throwable throwable) {
                 if (throwable instanceof GoogleAPIConnectionException) {
-                    Log.e(TAG, "Android Wear app is not installed");
+                    Log.v(TAG, "Android Wear app is not installed");
                 } else {
-                    Log.e(TAG, "Could not send message");
+                    Log.v(TAG, "Update events error", throwable);
                 }
             }
         });
