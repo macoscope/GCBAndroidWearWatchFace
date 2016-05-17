@@ -89,11 +89,12 @@ public class SyncPreferencesPresenter {
             new SharedPreferences.OnSharedPreferenceChangeListener() {
                 @Override
                 public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
-                    if (calendarListPreference.getKey().contentEquals(key) ||
-                            syncFrequencyPreference.getKey().equals(key)) {
+                    String calendarPreferenceKey = calendarListPreference.getKey();
+                    String syncFrequencyPreferenceKey = syncFrequencyPreference.getKey();
+                    if (calendarPreferenceKey.equals(key) || syncFrequencyPreferenceKey.equals(key)) {
 
-                        String calendarId = sharedPreferences.getString(calendarListPreference.getKey(), "");
-                        String syncFrequency = sharedPreferences.getString(syncFrequencyPreference.getKey(), "");
+                        String calendarId = sharedPreferences.getString(calendarPreferenceKey, "");
+                        String syncFrequency = sharedPreferences.getString(syncFrequencyPreferenceKey, "");
 
                         scheduleUpdateJob(calendarId, syncFrequency);
                     } else if(accountPreference.getKey().equals(key)){
@@ -135,7 +136,8 @@ public class SyncPreferencesPresenter {
             calendarId = Long.parseLong(calendarIdString);
             syncFrequency = Long.parseLong(syncFrequencyString);
         } catch (NumberFormatException numberFormatException){
-            //do nothing, use default values
+            // Do nothing, use default values it this case. Watch will receive empty events list because of empty
+            // events list for selected account.
         }
 
         syncJobScheduler.scheduleNewSyncJob(calendarId, syncFrequency);
@@ -300,9 +302,9 @@ public class SyncPreferencesPresenter {
     private void loadAvailableCalendars() {
         enableCalendarsList(false);
         if (!TextUtils.isEmpty(googleAccountCredential.getSelectedAccountName())) {
-            Subscription subscription = calendarUseCase.getCalendarsPreferenceList(googleAccountCredential.getSelectedAccountName())
-                    .subscribeOn(Schedulers
-                            .io())
+            Subscription subscription = calendarUseCase
+                    .getCalendarsPreferenceList(googleAccountCredential.getSelectedAccountName())
+                    .subscribeOn(Schedulers.io())
                     .observeOn(AndroidSchedulers.mainThread())
                     .subscribe(new Action1<Optional<Pair<CharSequence[], CharSequence[]>>>() {
                         @Override
