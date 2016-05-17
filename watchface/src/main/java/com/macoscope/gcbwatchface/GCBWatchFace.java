@@ -309,6 +309,8 @@ public class GCBWatchFace extends CanvasWatchFaceService {
             faceDrawer.draw(faceBitmap, outerOval, arcRect, bounds.width(), bounds.height(), minutes);
             if (eventFormatter.hasValidEvent()) {
                 indicatorDrawer.draw(faceBitmap, eventFormatter.getHourMinutes(), outerOval, innerOval, arcRect);
+            } else {
+                indicatorDrawer.clearIndication(faceBitmap, outerOval, arcRect);
             }
 
             canvas.drawBitmap(faceBitmap, padding - strokeSize, padding - strokeSize, bitmapPaint);

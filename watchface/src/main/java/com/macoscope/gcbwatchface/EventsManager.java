@@ -44,7 +44,7 @@ public class EventsManager {
                     public List<Event> call(DataMap dataMap) {
                         String json = dataMap.getString(CommunicationConfig.EVENTS_LIST_DATA_KEY);
                         if (TextUtils.isEmpty(json)) {
-                            return new ArrayList<Event>();
+                            return new ArrayList<>();
                         } else {
                             return gson.fromJson(json, eventListType);
                         }

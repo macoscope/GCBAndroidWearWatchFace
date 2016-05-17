@@ -44,14 +44,18 @@ public class EventIndicatorDrawer implements Drawer {
         innerArcPaint.setColor(Color.TRANSPARENT);
     }
 
+    private void initIndicationCanvas(Bitmap bitmap) {
+        if (indicatorCanvas == null) {
+            indicatorCanvas = new Canvas(bitmap);
+        }
+    }
+
     public void draw(Bitmap faceBitmap, int minutes, RectF oval, RectF innerOval, RectF arcRect) {
+
+        initIndicationCanvas(faceBitmap);
 
         innerOval.set(oval.left + ovalsPadding, oval.top + ovalsPadding, oval.right - ovalsPadding,
                 oval.bottom - ovalsPadding);
-
-        if (indicatorCanvas == null) {
-            indicatorCanvas = new Canvas(faceBitmap);
-        }
 
         float piece = (float) (Math.PI * innerOval.width() / 12);
         float gap = MeasureUtil.PIECES_GAP;
@@ -70,6 +74,16 @@ public class EventIndicatorDrawer implements Drawer {
                 innerOval.right + innerStrokeSize, innerOval.bottom + innerStrokeSize);
 
         indicatorCanvas.drawArc(arcRect, getStartAngle(minutes), ARC_MASK_SWAP_ANGLE, true, innerArcPaint);
+    }
+
+    public void clearIndication(Bitmap faceBitmap, RectF oval, RectF arcRect) {
+        initIndicationCanvas(faceBitmap);
+
+        arcRect.set(oval.left + ovalsPadding - innerStrokeSize, oval.top + ovalsPadding - innerStrokeSize,
+                oval.right - ovalsPadding + innerStrokeSize, oval.bottom - ovalsPadding + innerStrokeSize);
+
+        indicatorCanvas.drawOval(arcRect, innerArcPaint);
+
     }
 
     //TODO Test it
