@@ -22,13 +22,12 @@ public class CalendarRepository {
             Calendars.CALENDAR_DISPLAY_NAME
     };
 
-    private static final String CALENDAR_SELECTION = Calendars._ID + " = ?";
-
-    private static final String CALENDARS_SELECTION = Calendars.ACCOUNT_NAME + " = ?";
-
     // The indices for the projection array above.
     private static final int PROJECTION_CALENDAR_ID_INDEX = 0;
     private static final int PROJECTION_CALENDAR_DISPLAY_NAME_INDEX = 1;
+
+    private static final String CALENDAR_SELECTION = Calendars._ID + " = ?";
+    private static final String CALENDARS_SELECTION = Calendars.ACCOUNT_NAME + " = ?";
 
     private static final String[] INSTANCE_PROJECTION = new String[]{
             Instances.EVENT_ID,

@@ -67,20 +67,4 @@ public class CalendarUseCase {
         return Optional.of(new Pair<>(entries, values));
     }
 
-    public Observable<Optional<List<Event>>> getEvents(final long calendarId, final long minutes){
-        return Observable.defer(new Func0<Observable<Optional<List<Event>>>>() {
-            @Override
-            public Observable<Optional<List<Event>>> call() {
-                try {
-                    List<Event> calendars = calendarRepository.getEvents(calendarId, minutes, TimeUnit.MINUTES);
-                    if (calendars.size() > 0) {
-                        return Observable.just(Optional.of(calendars));
-                    }
-                } catch (Exception error) {
-                    return Observable.error(error);
-                }
-                return Observable.empty();
-            }
-        });
-    }
 }
