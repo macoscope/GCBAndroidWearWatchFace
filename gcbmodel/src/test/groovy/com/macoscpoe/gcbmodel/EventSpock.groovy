@@ -5,7 +5,7 @@ import spock.lang.Specification
 import java.util.concurrent.TimeUnit
 
 class EventSpock extends Specification {
-    def "Event.getMinutesToEvent() should return proper amount of minutes to upcoming event"() {
+    def "Should return proper amount of minutes to upcoming event"() {
         given:
         long now = System.currentTimeMillis()
         long timeAfter25minFromNow = now + TimeUnit.MINUTES.toMillis(25);
