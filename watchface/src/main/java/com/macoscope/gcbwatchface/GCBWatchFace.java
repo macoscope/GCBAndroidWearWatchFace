@@ -261,8 +261,10 @@ public class GCBWatchFace extends CanvasWatchFaceService {
                     hourDrawer.setAmbientMode(inAmbientMode);
                     eventDrawer.setAmbientMode(inAmbientMode);
                     indicatorDrawer.setAmbientMode(inAmbientMode);
-                    bitmapPaint.setAntiAlias(!inAmbientMode);
                     placeholderDrawer.setAmbientMode(inAmbientMode);
+
+                    bitmapPaint.setAntiAlias(!inAmbientMode);
+                    bitmapPaint.setFilterBitmap(!inAmbientMode);
                 }
                 invalidate();
             }
@@ -302,8 +304,6 @@ public class GCBWatchFace extends CanvasWatchFaceService {
             float centerY = bounds.centerY();
             int minutes = time.get(Calendar.MINUTE);
 
-            initWatchFaceBitmap(bounds, strokeSize);
-
             if (drawInEventMode) {
                 if (eventFormatter.hasValidEvent()) {
                     eventDrawer.draw(eventFormatter, canvas, innerOval.width() / 2, centerX, centerY, time.getTimeInMillis());
@@ -324,9 +324,16 @@ public class GCBWatchFace extends CanvasWatchFaceService {
 
         }
 
-        private void initWatchFaceBitmap(Rect bounds, float stroke) {
-            int width = (int) (bounds.width() - padding * 2 + stroke * 2);
-            int height = (int) (bounds.height() - padding * 2 + stroke * 2);
+        @Override
+        public void onSurfaceChanged(SurfaceHolder holder, int format, int width, int height) {
+            super.onSurfaceChanged(holder, format, width, height);
+            initWatchFaceBitmap(width, height, strokeSize);
+
+        }
+
+        private void initWatchFaceBitmap(int boundsWidth, int boundHeight, float stroke) {
+            int width = (int) (boundsWidth - padding * 2 + stroke * 2);
+            int height = (int) (boundHeight - padding * 2 + stroke * 2);
             if (faceBitmap == null) {
                 faceBitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
             }
