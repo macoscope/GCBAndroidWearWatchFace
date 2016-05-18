@@ -41,7 +41,9 @@ public class CalendarRepository {
     private static final int PROJECTION_INSTANCE_TITLE_INDEX = 2;
 
     private static final String INSTANCE_SELECTION = Instances.CALENDAR_ID + " = ?" +
-            " AND " + Instances.ALL_DAY + " =0";
+            " AND " + Instances.ALL_DAY + " = 0" +
+            " AND " + Instances.BEGIN + " > ? " +
+            " AND " + Instances.BEGIN + " <= ?";
 
     private static final String INSTANCE_ORDER = Instances.BEGIN + " ASC";
 
@@ -90,12 +92,13 @@ public class CalendarRepository {
         String calendarName = calendarNameOptional.isPresent() ? calendarNameOptional.get() : "";
         Uri.Builder builder = Instances.CONTENT_URI.buildUpon();
         long now = System.currentTimeMillis();
+        long timeTo = now + timeUnit.toMillis(timeInterval);
         ContentUris.appendId(builder, now);
-        ContentUris.appendId(builder, now + timeUnit.toMillis(timeInterval));
+        ContentUris.appendId(builder, Long.MAX_VALUE);
 
         Optional<Cursor> cursorOptional = Optional.ofNullable(contentResolver.query(builder.build(), INSTANCE_PROJECTION,
-                INSTANCE_SELECTION, new String[]{Long.toString(calendarId)}, INSTANCE_ORDER));
-
+                INSTANCE_SELECTION, new String[]{Long.toString(calendarId), Long.toString(now), Long.toString(timeTo)},
+                INSTANCE_ORDER));
         if (cursorOptional.isPresent() && cursorOptional.get().getCount() > 0) {
             Cursor cursor = cursorOptional.get();
             List<Event> events = new ArrayList<>(cursor.getCount());

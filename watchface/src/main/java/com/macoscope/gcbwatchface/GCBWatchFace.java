@@ -427,7 +427,7 @@ public class GCBWatchFace extends CanvasWatchFaceService {
             if (upcomingEvent.isPresent()) {
                 Event event = upcomingEvent.get();
                 eventFormatter.setEvent(event);
-                long delay = event.getStartDate() - System.currentTimeMillis();
+                long delay = event.getStartDate() - (System.currentTimeMillis() % event.getStartDate());
                 engineHandler.sendEmptyMessageDelayed(MSG_UPDATE_EVENT, delay);
             } else {
                 placeholderDrawer.setMessage(noUpcomingEvents);

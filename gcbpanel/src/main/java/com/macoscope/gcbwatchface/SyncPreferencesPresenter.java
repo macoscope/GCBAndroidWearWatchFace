@@ -352,12 +352,12 @@ public class SyncPreferencesPresenter {
 
     private void clearCalendarsPreference() {
         setCalendarsPreference(EMPTY_CHARS_ARRAY, EMPTY_CHARS_ARRAY);
+        calendarListPreference.setSummary(R.string.no_calendar_selected);
         SharedPreferences.Editor editor = sharedPreferences.edit();
         editor.remove(calendarListPreference.getKey()).commit();
     }
 
     private void setCalendarsPreference(CharSequence[] entries, CharSequence[] values) {
-        calendarListPreference.setSummary(R.string.no_calendar_selected);
         calendarListPreference.setEntries(entries);
         calendarListPreference.setEntryValues(values);
     }

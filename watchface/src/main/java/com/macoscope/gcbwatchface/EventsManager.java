@@ -15,6 +15,8 @@ import com.patloew.rxwear.transformers.MessageEventGetDataMap;
 
 import java.lang.reflect.Type;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 
 import rx.Subscription;
@@ -28,6 +30,18 @@ public class EventsManager {
     private Gson gson;
     private Type eventListType = new TypeToken<List<Event>>() {}.getType();
     private List<Event> events;
+    private Comparator<Event> eventComparator = new Comparator<Event>() {
+        @Override
+        public int compare(Event lhs, Event rhs) {
+            if(lhs.getStartDate() < rhs.getStartDate()){
+                return -1;
+            } else if(lhs.getStartDate() > rhs.getStartDate()){
+                return 1;
+            } else {
+                return 0;
+            }
+        }
+    };
 
     public EventsManager(Context context) {
         RxWear.init(context);
@@ -54,6 +68,9 @@ public class EventsManager {
                 .subscribe(new Action1<List<Event>>() {
                     @Override
                     public void call(List<Event> events) {
+                        Collections.sort(events, eventComparator);
+                        for(int i=0; i<events.size(); i++){
+                        }
                         eventsLoaded(events);
                         listener.onEventsListChanged();
                     }
@@ -84,8 +101,14 @@ public class EventsManager {
             if (event.isValid()) {
                 return Optional.of(event);
             } else {
-                events.remove(0);
-                return getUpcomingEvent();
+                while (events.size() > 0 && !events.get(0).isValid()){
+                    events.remove(0);
+                }
+                if(events.size() > 0){
+                    return Optional.of(events.get(0));
+                } else {
+                    return Optional.empty();
+                }
             }
         }
     }

@@ -47,7 +47,7 @@ public class PlaceholderDrawer implements Drawer {
     }
 
     public void draw(Canvas canvas, float boundsWidth, float centerX, float centerY) {
-        if (needNewStaticLayout) {
+        if (needNewStaticLayout || staticLayout == null) {
             staticLayout = new StaticLayout(message, textPaint, getLayoutWidth(boundsWidth),
                     Layout.Alignment.ALIGN_NORMAL, 1, 0, false);
             needNewStaticLayout = false;
