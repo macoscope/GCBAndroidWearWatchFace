@@ -4,10 +4,8 @@ import android.content.ContentResolver;
 import android.util.Pair;
 
 import com.eccyan.optional.Optional;
-import com.macoscpoe.gcbmodel.Event;
 
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 
 import rx.Observable;
 import rx.functions.Func0;
@@ -33,24 +31,16 @@ public class CalendarUseCase {
         calendarRepository = new CalendarRepository(contentResolver);
     }
 
-    public Observable<Optional<List<CalendarModel>>> getCalendars(final String account){
+    public Observable<Optional<List<CalendarModel>>> getCalendars(final String account) {
         return Observable.defer(new Func0<Observable<Optional<List<CalendarModel>>>>() {
             @Override
             public Observable<Optional<List<CalendarModel>>> call() {
-                try {
-                    List<CalendarModel> calendars = calendarRepository.getCalendars(account);
-                    if (calendars.size() > 0) {
-                        return Observable.just(Optional.of(calendars));
-                    }
-                } catch (Exception error) {
-                    return Observable.error(error);
-                }
-                return Observable.just(Optional.<List<CalendarModel>>empty());
+                return Observable.just(calendarRepository.getCalendars(account));
             }
         });
     }
 
-    public Observable<Optional<Pair<CharSequence[], CharSequence[]>>> getCalendarsPreferenceList(String account){
+    public Observable<Optional<Pair<CharSequence[], CharSequence[]>>> getCalendarsPreferenceList(String account) {
         return getCalendars(account).map(calendarsListToPreferenceArraysMapFunction);
     }
 

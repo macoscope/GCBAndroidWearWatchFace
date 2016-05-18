@@ -7,7 +7,6 @@ import android.preference.ListPreference;
 import android.preference.Preference;
 import android.preference.PreferenceFragment;
 import android.support.design.widget.Snackbar;
-import android.view.View;
 
 import com.google.android.gms.common.GoogleApiAvailability;
 

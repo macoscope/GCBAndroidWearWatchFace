@@ -12,7 +12,6 @@
         <item>30 minutes</item>
         <item>45 minutes</item>
         <item>55 minutes</item>
-        <item>1 hour</item>
     </string-array>
     <string-array name="pref_sync_frequency_values">
         <item>1</item>
@@ -23,7 +22,6 @@
         <item>30</item>
         <item>45</item>
         <item>55</item>
-        <item>60</item>
     </string-array>
 
     <string name="pref_title_system_sync_settings">System sync settings</string>

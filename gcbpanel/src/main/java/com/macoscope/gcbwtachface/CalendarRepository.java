@@ -51,33 +51,41 @@ public class CalendarRepository {
         this.contentResolver = contentResolver;
     }
 
-    public List<CalendarModel> getCalendars(String account) {
+    public Optional<List<CalendarModel>> getCalendars(String account) {
         Uri uri = Calendars.CONTENT_URI;
-        Cursor cursor = contentResolver.query(uri, CALENDAR_PROJECTION, CALENDARS_SELECTION, new String[]{account}, null);
-        List<CalendarModel> calendarModels = new ArrayList<>(cursor.getCount());
-        while (cursor.moveToNext()) {
-            CalendarModel calendarModel = new CalendarModel(cursor.getLong(PROJECTION_CALENDAR_ID_INDEX),
-                    cursor.getString(PROJECTION_CALENDAR_DISPLAY_NAME_INDEX));
-            calendarModels.add(calendarModel);
+        Optional<Cursor> cursorOptional = Optional.ofNullable(contentResolver.query(uri, CALENDAR_PROJECTION,
+                CALENDARS_SELECTION, new String[]{account}, null));
+        if (cursorOptional.isPresent() && cursorOptional.get().getCount() > 0) {
+            Cursor cursor = cursorOptional.get();
+            List<CalendarModel> calendarModels = new ArrayList<>(cursor.getCount());
+            while (cursor.moveToNext()) {
+                CalendarModel calendarModel = new CalendarModel(cursor.getLong(PROJECTION_CALENDAR_ID_INDEX),
+                        cursor.getString(PROJECTION_CALENDAR_DISPLAY_NAME_INDEX));
+                calendarModels.add(calendarModel);
+            }
+            cursor.close();
+            return Optional.of(calendarModels);
         }
-        cursor.close();
-        return calendarModels;
+        return Optional.empty();
     }
 
 
     private Optional<String> getCalendarDisplayName(long calendarId) {
         Uri uri = Calendars.CONTENT_URI;
-        Cursor cursor = contentResolver.query(uri, CALENDAR_PROJECTION, CALENDAR_SELECTION,
-                new String[]{Long.toString(calendarId)}, null);
+        Optional<Cursor> cursorOptional = Optional.ofNullable(contentResolver.query(uri, CALENDAR_PROJECTION,
+                CALENDAR_SELECTION, new String[]{Long.toString(calendarId)}, null));
         Optional<String> calendarName = Optional.empty();
-        if (cursor.moveToFirst()) {
-            calendarName = Optional.of(cursor.getString(PROJECTION_CALENDAR_DISPLAY_NAME_INDEX));
+        if (cursorOptional.isPresent()) {
+            Cursor cursor = cursorOptional.get();
+            if (cursor.moveToFirst()) {
+                calendarName = Optional.of(cursor.getString(PROJECTION_CALENDAR_DISPLAY_NAME_INDEX));
+            }
+            cursor.close();
         }
-        cursor.close();
         return calendarName;
     }
 
-    public List<Event> getEvents(long calendarId, long timeInterval, TimeUnit timeUnit) {
+    public Optional<List<Event>> getEvents(long calendarId, long timeInterval, TimeUnit timeUnit) {
         Optional<String> calendarNameOptional = getCalendarDisplayName(calendarId);
         String calendarName = calendarNameOptional.isPresent() ? calendarNameOptional.get() : "";
         Uri.Builder builder = Instances.CONTENT_URI.buildUpon();
@@ -85,18 +93,21 @@ public class CalendarRepository {
         ContentUris.appendId(builder, now);
         ContentUris.appendId(builder, now + timeUnit.toMillis(timeInterval));
 
-        Cursor cursor = contentResolver.query(builder.build(), INSTANCE_PROJECTION,
-                INSTANCE_SELECTION, new String[]{Long.toString(calendarId)}, INSTANCE_ORDER);
+        Optional<Cursor> cursorOptional = Optional.ofNullable(contentResolver.query(builder.build(), INSTANCE_PROJECTION,
+                INSTANCE_SELECTION, new String[]{Long.toString(calendarId)}, INSTANCE_ORDER));
 
-        List<Event> events = new ArrayList<>(cursor.getCount());
-        while (cursor.moveToNext()) {
-            Event event = new Event(cursor.getLong(PROJECTION_INSTANCE_ID_INDEX),
-                    cursor.getLong(PROJECTION_INSTANCE_BEGIN_INDEX),
-                    cursor.getString(PROJECTION_INSTANCE_TITLE_INDEX), calendarName);
-            events.add(event);
+        if (cursorOptional.isPresent() && cursorOptional.get().getCount() > 0) {
+            Cursor cursor = cursorOptional.get();
+            List<Event> events = new ArrayList<>(cursor.getCount());
+            while (cursor.moveToNext()) {
+                Event event = new Event(cursor.getLong(PROJECTION_INSTANCE_ID_INDEX),
+                        cursor.getLong(PROJECTION_INSTANCE_BEGIN_INDEX),
+                        cursor.getString(PROJECTION_INSTANCE_TITLE_INDEX), calendarName);
+                events.add(event);
+            }
+            cursor.close();
+            return Optional.of(events);
         }
-        cursor.close();
-        return events;
+        return Optional.empty();
     }
-
 }

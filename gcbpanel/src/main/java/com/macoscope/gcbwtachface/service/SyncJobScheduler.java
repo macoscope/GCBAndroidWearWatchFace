@@ -13,7 +13,6 @@ public class SyncJobScheduler {
 
     public void scheduleNewSyncJob(long calendarId, long intervalInMinutes) {
         PersistableBundleCompat extras = new PersistableBundleCompat();
-        extras.putLong(SyncJob.KEY_MINUTES, intervalInMinutes);
         extras.putLong(SyncJob.KEY_CALENDAR_ID, calendarId);
         //Send data now
         scheduleSendDataOnceNow(extras);
