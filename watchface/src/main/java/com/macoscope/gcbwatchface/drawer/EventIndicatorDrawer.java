@@ -10,13 +10,13 @@ import android.graphics.RectF;
 import android.support.annotation.VisibleForTesting;
 
 import com.macoscope.gcbwatchface.ColorPalette;
-import com.macoscope.gcbwatchface.MeasureUtil;
-import com.macoscope.gcbwatchface.PathEffectUtil;
+import com.macoscope.gcbwatchface.util.DashedCirclePaintWrapper;
 
 public class EventIndicatorDrawer implements Drawer {
     private static final float ARC_MASK_SWAP_ANGLE = 330;
     private Paint innerOvalPaint;
     private Paint innerArcPaint;
+    private DashedCirclePaintWrapper dashedCirclePaintWrapper;
     private Canvas indicatorCanvas;
     private float innerStrokeSize;
     private RectF innerOval;
@@ -38,6 +38,7 @@ public class EventIndicatorDrawer implements Drawer {
         innerOvalPaint.setColor(colorPalette.colorWhite);
         innerOvalPaint.setStrokeWidth(innerStrokeSize);
         innerOvalPaint.setStyle(Paint.Style.STROKE);
+        dashedCirclePaintWrapper = new DashedCirclePaintWrapper(innerOvalPaint);
     }
 
     private void initInactiveInnerPiecesPaint() {
@@ -48,15 +49,12 @@ public class EventIndicatorDrawer implements Drawer {
     }
 
 
-    public void measure(Bitmap faceBitmap, RectF innerOval){
+    public void measure(Bitmap faceBitmap, RectF innerOval) {
         this.innerOval = innerOval;
 
         indicatorCanvas = new Canvas(faceBitmap);
-
-        float piece = (float) (Math.PI * innerOval.width() / 12);
-        float gap = MeasureUtil.PIECES_GAP;
-        innerOvalPaint.setPathEffect(PathEffectUtil.getDashedStrokeEffect(piece, gap));
-        ovalRotation = (gap / 2 * 30) / piece;
+        dashedCirclePaintWrapper.onDiameterChange(innerOval.width());
+        ovalRotation = dashedCirclePaintWrapper.getRotation(0);
         arcRect.set(innerOval.left - innerStrokeSize, innerOval.top - innerStrokeSize,
                 innerOval.right + innerStrokeSize, innerOval.bottom + innerStrokeSize);
 

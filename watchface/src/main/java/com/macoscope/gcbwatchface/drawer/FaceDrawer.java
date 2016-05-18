@@ -10,19 +10,23 @@ import android.graphics.SweepGradient;
 import android.support.annotation.VisibleForTesting;
 
 import com.macoscope.gcbwatchface.ColorPalette;
-import com.macoscope.gcbwatchface.MeasureUtil;
-import com.macoscope.gcbwatchface.PathEffectUtil;
+import com.macoscope.gcbwatchface.util.DashedCirclePaintWrapper;
 
 public class FaceDrawer implements Drawer {
     /**
      * Positions tweaked for best gradient position on canvas rotation
      */
     private final float[] OVAL_GRADIENT_POSITION = new float[]{0f, 0.495f, 0.495f, 0.995f, 0.995f};
+    /**
+     * Rotation angle offset which must be applied as rotation to canvas if ovals should be drawn from top
+     */
+    private static final int OVAL_ANGLE_OFFSET = -90;
 
     private Canvas faceCanvas;
     private ColorPalette colorPalette;
     private Paint gradientPaint;
     private Paint arcPaint;
+    private DashedCirclePaintWrapper dashedCirclePaintWrapper;
     private RectF oval;
     private RectF arcRect;
     private float padding;
@@ -45,6 +49,7 @@ public class FaceDrawer implements Drawer {
         // gradient set in onDraw
         gradientPaint.setStrokeWidth(strokeSize);
         gradientPaint.setStyle(Paint.Style.STROKE);
+        dashedCirclePaintWrapper = new DashedCirclePaintWrapper(gradientPaint);
     }
 
     private void initInactivePiecesPaint() {
@@ -67,14 +72,9 @@ public class FaceDrawer implements Drawer {
         gradientPaint.setShader(new SweepGradient(centerX, centerY, colorPalette.ovalGradient, OVAL_GRADIENT_POSITION));
 
         outerOval.set(stroke, stroke, ovalWidth - stroke, ovalHeight - stroke);
-
-        float piece = (float) (Math.PI * outerOval.width() / 12);
-        float gap = MeasureUtil.PIECES_GAP;
-        gradientPaint.setPathEffect(PathEffectUtil.getDashedStrokeEffect(piece, gap));
-        //count rotation to have gaps in dashed stroke on hours place
-        ovalRotation = (gap / 2 * 30) / piece - 90;
-
-        arcRect = new RectF(oval.left - padding, oval.top - padding, oval.right + padding, oval.bottom  + padding);
+        dashedCirclePaintWrapper.onDiameterChange(outerOval.width());
+        ovalRotation = dashedCirclePaintWrapper.getRotation(OVAL_ANGLE_OFFSET);
+        arcRect = new RectF(oval.left - padding, oval.top - padding, oval.right + padding, oval.bottom + padding);
     }
 
     public void draw(int minutes) {
@@ -82,21 +82,22 @@ public class FaceDrawer implements Drawer {
         faceCanvas.rotate(ovalRotation, centerX, centerY);
         faceCanvas.drawOval(oval, gradientPaint);
         faceCanvas.restore();
-        faceCanvas.drawArc(arcRect, -90, getSwapAngle(minutes), true, arcPaint);
+        faceCanvas.drawArc(arcRect, OVAL_ANGLE_OFFSET, getSwapAngle(minutes), true, arcPaint);
     }
+
     //TODO Test it
     @VisibleForTesting
-    private int getSwapAngle(int minutes){
+    private int getSwapAngle(int minutes) {
         if (minutes >= 30) {
             return (minutes * 6 / 30) * 30;
         } else if (minutes == 0) {
-            return  -330;
+            return -330;
         } else {
-            return  -((59 - minutes) * 6 / 30) * 30;
+            return -((59 - minutes) * 6 / 30) * 30;
         }
     }
 
-    public void setAmbientMode(boolean ambientModeOn){
+    public void setAmbientMode(boolean ambientModeOn) {
         gradientPaint.setAntiAlias(!ambientModeOn);
         arcPaint.setAntiAlias(!ambientModeOn);
     }

@@ -8,7 +8,7 @@ import android.text.TextPaint;
 
 import com.macoscope.gcbwatchface.ColorPalette;
 import com.macoscope.gcbwatchface.formatter.HourFormatter;
-import com.macoscope.gcbwatchface.MeasureUtil;
+import com.macoscope.gcbwatchface.util.MeasureUtil;
 
 import java.util.Calendar;
 import java.util.TimeZone;

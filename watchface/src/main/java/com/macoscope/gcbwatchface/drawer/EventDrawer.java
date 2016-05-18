@@ -15,7 +15,7 @@ import android.widget.TextView;
 
 import com.macoscope.gcbwatchface.ColorPalette;
 import com.macoscope.gcbwatchface.formatter.EventFormatter;
-import com.macoscope.gcbwatchface.MeasureUtil;
+import com.macoscope.gcbwatchface.util.MeasureUtil;
 import com.macoscope.gcbwatchface.R;
 
 public class EventDrawer implements Drawer {

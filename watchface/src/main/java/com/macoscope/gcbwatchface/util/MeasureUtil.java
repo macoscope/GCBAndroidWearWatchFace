@@ -1,4 +1,4 @@
-package com.macoscope.gcbwatchface;
+package com.macoscope.gcbwatchface.util;
 
 
 import android.content.res.Resources;
