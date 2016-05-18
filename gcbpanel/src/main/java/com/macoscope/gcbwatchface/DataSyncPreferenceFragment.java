@@ -1,4 +1,4 @@
-package com.macoscope.gcbwtachface;
+package com.macoscope.gcbwatchface;
 
 import android.app.Dialog;
 import android.content.Intent;

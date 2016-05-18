@@ -1,4 +1,4 @@
-package com.macoscope.gcbwtachface;
+package com.macoscope.gcbwatchface;
 
 
 public class CalendarModel {

@@ -1,4 +1,4 @@
-package com.macoscope.gcbwtachface.service;
+package com.macoscope.gcbwatchface.service;
 
 import com.evernote.android.job.JobManager;
 import com.evernote.android.job.JobRequest;

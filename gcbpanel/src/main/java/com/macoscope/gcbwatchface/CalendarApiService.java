@@ -1,4 +1,4 @@
-package com.macoscope.gcbwtachface;
+package com.macoscope.gcbwatchface;
 
 import com.google.api.client.extensions.android.http.AndroidHttp;
 import com.google.api.client.googleapis.extensions.android.gms.auth.GoogleAccountCredential;

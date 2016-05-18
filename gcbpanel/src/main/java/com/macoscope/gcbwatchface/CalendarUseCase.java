@@ -1,4 +1,4 @@
-package com.macoscope.gcbwtachface;
+package com.macoscope.gcbwatchface;
 
 import android.content.ContentResolver;
 import android.util.Pair;

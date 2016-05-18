@@ -1,4 +1,4 @@
-package com.macoscope.gcbwtachface;
+package com.macoscope.gcbwatchface;
 
 import android.Manifest;
 import android.accounts.AccountManager;
@@ -17,7 +17,7 @@ import com.google.android.gms.common.GoogleApiAvailability;
 import com.google.api.client.googleapis.extensions.android.gms.auth.GoogleAccountCredential;
 import com.google.api.client.util.ExponentialBackOff;
 import com.google.api.services.calendar.CalendarScopes;
-import com.macoscope.gcbwtachface.service.SyncJobScheduler;
+import com.macoscope.gcbwatchface.service.SyncJobScheduler;
 
 import java.util.Arrays;
 
