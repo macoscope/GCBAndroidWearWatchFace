@@ -69,8 +69,6 @@ public class EventsManager {
                     @Override
                     public void call(List<Event> events) {
                         Collections.sort(events, eventComparator);
-                        for(int i=0; i<events.size(); i++){
-                        }
                         eventsLoaded(events);
                         listener.onEventsListChanged();
                     }
