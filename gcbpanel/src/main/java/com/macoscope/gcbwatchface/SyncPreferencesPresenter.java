@@ -54,6 +54,8 @@ public class SyncPreferencesPresenter {
     private SyncJobScheduler syncJobScheduler;
     private SharedPreferences sharedPreferences;
 
+    private String noneSelection;
+
     /**
      * A preference value change listener that updates the preference's summary
      * to reflect its new value.
@@ -64,21 +66,9 @@ public class SyncPreferencesPresenter {
                 public boolean onPreferenceChange(Preference preference, Object value) {
                     String stringValue = value.toString();
                     if (preference instanceof ListPreference) {
-                        // For list preferences, look up the correct display value in
-                        // the preference's 'entries' list.
                         ListPreference listPreference = (ListPreference) preference;
-                        int index = listPreference.findIndexOfValue(stringValue);
-
-                        // Set the summary to reflect the new value.
-                        preference.setSummary(
-                                index >= 0
-                                        ? listPreference.getEntries()[index]
-                                        : null);
-
-
+                        setSummaryFromSelectedValue(listPreference, stringValue, noneSelection);
                     } else {
-                        // For all other preferences, set the summary to the value's
-                        // simple string representation.
                         preference.setSummary(stringValue);
                     }
                     return true;
@@ -97,7 +87,7 @@ public class SyncPreferencesPresenter {
                         String syncFrequency = sharedPreferences.getString(syncFrequencyPreferenceKey, "");
 
                         scheduleUpdateJob(calendarId, syncFrequency);
-                    } else if(accountPreference.getKey().equals(key)){
+                    } else if (accountPreference.getKey().equals(key)) {
                         clearCalendarsPreference();
                     }
                 }
@@ -105,7 +95,7 @@ public class SyncPreferencesPresenter {
 
     public SyncPreferencesPresenter(SyncPreferencesView syncPreferencesView, Context context,
                                     final ListPreference syncFrequencyPreference, final Preference accountPreference,
-                                    final ListPreference calendarListPreference) {
+                                    final ListPreference calendarListPreference, Preference syncNowPreference) {
         this.syncPreferencesView = syncPreferencesView;
         this.context = context;
         this.accountPreference = accountPreference;
@@ -114,13 +104,36 @@ public class SyncPreferencesPresenter {
         this.compositeSubscription = new CompositeSubscription();
         this.syncJobScheduler = new SyncJobScheduler();
         this.sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
-
+        this.noneSelection = context.getString(R.string.none_selected);
         setBindPreferenceSummariesToValues();
         setSharedPreferenceChangeListener();
         initCredentials();
         initCalendarUseCase();
-        loadAvailableCalendarsIfPermissionsGranted();
+        loadAvailableCalendarsIfPermissionsGranted(true);
         setAccountPreferenceClickListener(accountPreference);
+        bindClickListenerForRefresh(syncNowPreference);
+    }
+
+    private void bindClickListenerForRefresh(Preference preference) {
+        preference.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
+            @Override
+            public boolean onPreferenceClick(Preference preference) {
+                forceRefreshIfParametersStored();
+                return true;
+            }
+        });
+    }
+
+    private void forceRefreshIfParametersStored() {
+        String calendarPreferenceKey = calendarListPreference.getKey();
+        String syncFrequencyPreferenceKey = syncFrequencyPreference.getKey();
+        if (sharedPreferences.contains(calendarPreferenceKey) && sharedPreferences.contains(syncFrequencyPreferenceKey)) {
+            String calendarId = sharedPreferences.getString(calendarPreferenceKey, "");
+            String syncFrequency = sharedPreferences.getString(syncFrequencyPreferenceKey, "");
+            scheduleUpdateJob(calendarId, syncFrequency);
+        } else {
+            syncPreferencesView.showMessage(R.string.pref_sync_now_error);
+        }
     }
 
     public void onDestroy() {
@@ -135,7 +148,7 @@ public class SyncPreferencesPresenter {
         try {
             calendarId = Long.parseLong(calendarIdString);
             syncFrequency = Long.parseLong(syncFrequencyString);
-        } catch (NumberFormatException numberFormatException){
+        } catch (NumberFormatException numberFormatException) {
             // Do nothing, use default values it this case. Watch will receive empty events list because of empty
             // events list for selected account.
         }
@@ -143,7 +156,7 @@ public class SyncPreferencesPresenter {
         syncJobScheduler.scheduleNewSyncJob(calendarId, syncFrequency);
     }
 
-    private void cancelScheduledJobs(){
+    private void cancelScheduledJobs() {
         syncJobScheduler.cancelAllScheduledJobs();
     }
 
@@ -176,6 +189,13 @@ public class SyncPreferencesPresenter {
                 sharedPreferences.getString(preference.getKey(), ""));
     }
 
+    private void setSummaryFromSelectedValue(ListPreference listPreference, CharSequence newValue, CharSequence empty) {
+        String value = newValue.toString();
+        int index = listPreference.findIndexOfValue(value);
+        // Set the summary to reflect the new value.
+        listPreference.setSummary(index >= 0 ? listPreference.getEntries()[index] : empty);
+    }
+
     private void chooseAccountIfGooglePlayServicesAvailable() {
         if (!isGooglePlayServicesAvailable()) {
             acquireGooglePlayServices();
@@ -201,6 +221,14 @@ public class SyncPreferencesPresenter {
         String accountName = sharedPreferences.getString(accountPreference.getKey(), null);
         if (accountName != null) {
             googleAccountCredential.setSelectedAccountName(accountName);
+        }
+    }
+
+    private void restoreCalendarsSummary() {
+        String calendarListKey = calendarListPreference.getKey();
+        if (sharedPreferences.contains(calendarListKey)) {
+            setSummaryFromSelectedValue(calendarListPreference, sharedPreferences.getString(calendarListKey, ""),
+                    noneSelection);
         }
     }
 
@@ -278,7 +306,7 @@ public class SyncPreferencesPresenter {
                         editor.commit();
                         accountPreference.setSummary(accountName);
                         googleAccountCredential.setSelectedAccountName(accountName);
-                        loadAvailableCalendarsIfPermissionsGranted();
+                        loadAvailableCalendarsIfPermissionsGranted(false);
                     }
                 }
                 break;
@@ -286,9 +314,9 @@ public class SyncPreferencesPresenter {
     }
 
     @AfterPermissionGranted(REQUEST_PERMISSION_READ_CALENDAR)
-    private void loadAvailableCalendarsIfPermissionsGranted() {
+    private void loadAvailableCalendarsIfPermissionsGranted(boolean initial) {
         if (EasyPermissions.hasPermissions(context, Manifest.permission.READ_CALENDAR)) {
-            loadAvailableCalendars();
+            loadAvailableCalendars(initial);
         } else {
             EasyPermissions.requestPermissions(
                     context,
@@ -299,7 +327,7 @@ public class SyncPreferencesPresenter {
     }
 
 
-    private void loadAvailableCalendars() {
+    private void loadAvailableCalendars(final boolean initial) {
         enableCalendarsList(false);
         if (!TextUtils.isEmpty(googleAccountCredential.getSelectedAccountName())) {
             Subscription subscription = calendarUseCase
@@ -311,6 +339,9 @@ public class SyncPreferencesPresenter {
                         public void call(Optional<Pair<CharSequence[], CharSequence[]>> pairOptional) {
                             if (pairOptional.isPresent()) {
                                 bindCalendarsToPreferenceList(pairOptional.get());
+                                if(initial) {
+                                    restoreCalendarsSummary();
+                                }
                             } else {
                                 handleNoCalendarForAccount();
                             }
@@ -352,7 +383,7 @@ public class SyncPreferencesPresenter {
 
     private void clearCalendarsPreference() {
         setCalendarsPreference(EMPTY_CHARS_ARRAY, EMPTY_CHARS_ARRAY);
-        calendarListPreference.setSummary(R.string.no_calendar_selected);
+        calendarListPreference.setSummary(R.string.none_selected);
         SharedPreferences.Editor editor = sharedPreferences.edit();
         editor.remove(calendarListPreference.getKey()).commit();
     }
