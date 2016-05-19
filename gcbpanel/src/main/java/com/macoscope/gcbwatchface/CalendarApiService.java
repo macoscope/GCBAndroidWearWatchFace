@@ -30,8 +30,7 @@ public class CalendarApiService {
      * Fetch a list of calendars for given user.
      */
     public CalendarList getCalendars() throws IOException {
-        CalendarList calendarList = calendarService.calendarList().list().execute();
-        return calendarList;
+        return calendarService.calendarList().list().execute();
     }
 
     /**
@@ -39,12 +38,11 @@ public class CalendarApiService {
      */
     public Events getEvents(String calendarId, int maxResults) throws IOException {
         DateTime now = new DateTime(System.currentTimeMillis());
-        Events events = calendarService.events().list(calendarId)
+        return calendarService.events().list(calendarId)
                 .setMaxResults(maxResults)
                 .setTimeMin(now)
                 .setOrderBy(DEFAULT_ORDER_BY)
                 .setSingleEvents(true)
                 .execute();
-        return events;
     }
 }

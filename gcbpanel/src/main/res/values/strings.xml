@@ -25,7 +25,6 @@
     </string-array>
     <string name="pref_sync_frequency_default_value">55</string>
 
-    <string name="pref_title_system_sync_settings">System sync settings</string>
     <string name="pref_key_sync_frequency">pref_sync_frequency</string>
     <string name="pref_key_sync_account">pref_sync_account</string>
     <string name="pref_key_sync_calendar">pref_sync_calendar</string>
@@ -37,7 +36,6 @@
     <string name="pref_title_calendar">Synchronized calendar</string>
     <string name="none_selected">None</string>
     <string name="read_calendar_permissions">This app required read calendars permission.</string>
-    <string name="refresh">Refresh</string>
     <string name="pref_sync_account">Sync account</string>
     <string name="pref_sync_now">Synchronize now</string>
     <string name="pref_sync_now_error">You must select account and calendar before synchronize.</string>

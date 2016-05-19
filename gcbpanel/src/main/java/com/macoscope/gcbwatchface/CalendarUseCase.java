@@ -40,7 +40,7 @@ public class CalendarUseCase {
         });
     }
 
-    public Observable<Optional<Pair<CharSequence[], CharSequence[]>>> getCalendarsPreferenceList(String account) {
+    public Observable getCalendarsPreferenceList(String account) {
         return getCalendars(account).map(calendarsListToPreferenceArraysMapFunction);
     }
 

@@ -19,13 +19,11 @@ import java.util.concurrent.TimeUnit;
 
 import rx.functions.Action1;
 
-public class SyncJob extends Job {
+class SyncJob extends Job {
     private static final int MINUTES_LIMIT_FOR_UPCOMING_EVENTS = 55;
     public static final String TAG = "gcb_watchface_sync_job";
     public static final String TAG_AD_HOC = "gcb_watchface_sync_job_ad_hoc";
     public static final String KEY_CALENDAR_ID = "calendarId";
-    private Gson gson;
-    private CalendarRepository calendarRepository;
 
     @NonNull
     @Override
@@ -34,7 +32,7 @@ public class SyncJob extends Job {
         long calendarId = extras.getLong(KEY_CALENDAR_ID, -1);
 
         if (!isCanceled()) {
-            calendarRepository = new CalendarRepository(getContext().getContentResolver());
+            CalendarRepository calendarRepository = new CalendarRepository(getContext().getContentResolver());
             if(calendarId != -1){
                 Optional<List<Event>> eventsOptional = calendarRepository.getEvents(calendarId,
                         MINUTES_LIMIT_FOR_UPCOMING_EVENTS, TimeUnit.MINUTES);
@@ -53,7 +51,7 @@ public class SyncJob extends Job {
 
     private void sendEvents(List<Event> eventList) {
         RxWear.init(getContext());
-        gson = new Gson();
+        Gson gson = new Gson();
         final String eventsJson = gson.toJson(eventList);
         RxWear.Message.SendDataMap.toAllRemoteNodes(CommunicationConfig.EVENTS_LIST_PATH)
                 .putString(CommunicationConfig.EVENTS_LIST_DATA_KEY, eventsJson)
