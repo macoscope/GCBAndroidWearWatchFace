@@ -78,7 +78,7 @@ public class GCBWatchFace extends CanvasWatchFaceService {
                             break;
                         }
                         case MSG_UPDATE_EVENT: {
-                            engine.updateEvent();
+                            engine.handleUpdateEventMessage();
                             break;
                         }
                     }
@@ -100,7 +100,6 @@ public class GCBWatchFace extends CanvasWatchFaceService {
         private ColorPalette colorPalette;
 
         private Calendar time;
-        private Calendar formatterCalendar;
         private Bitmap faceBitmap;
         private Paint bitmapPaint;
 
@@ -136,14 +135,14 @@ public class GCBWatchFace extends CanvasWatchFaceService {
                 if (hourDrawer != null) {
                     hourDrawer.setTimeZone(timeZone);
                 }
-                formatterCalendar.setTimeZone(timeZone);
+                eventFormatter.setTimeZone(timeZone);
             }
         };
 
         private EventsListChangeListener eventsListListener = new EventsListChangeListener() {
             @Override
             public void onEventsListChanged() {
-                updateEvent();
+                handleUpdateEventMessage();
             }
 
             @Override
@@ -156,7 +155,7 @@ public class GCBWatchFace extends CanvasWatchFaceService {
         public void onCreate(SurfaceHolder holder) {
             super.onCreate(holder);
             setUpWatchFaceStyle();
-            initCalendars();
+            initCalendar();
             initEventFormatter();
             Context context = GCBWatchFace.this.getApplicationContext();
             initResources(context);
@@ -172,7 +171,7 @@ public class GCBWatchFace extends CanvasWatchFaceService {
         }
 
         private void initEventFormatter() {
-            eventFormatter = new EventFormatter(formatterCalendar);
+            eventFormatter = new EventFormatter();
         }
 
         private void initResources(Context context) {
@@ -217,9 +216,8 @@ public class GCBWatchFace extends CanvasWatchFaceService {
                     .build());
         }
 
-        private void initCalendars() {
+        private void initCalendar() {
             time = new GregorianCalendar();
-            formatterCalendar = new GregorianCalendar();
         }
 
         private void initPaints() {
@@ -297,15 +295,17 @@ public class GCBWatchFace extends CanvasWatchFaceService {
 
         @Override
         public void onDraw(Canvas canvas, Rect bounds) {
-            time.setTimeInMillis(System.currentTimeMillis());
+            long currentTime = System.currentTimeMillis();
+            time.setTimeInMillis(currentTime);
             canvas.drawColor(colorPalette.backgroundColor);
 
             float centerX = bounds.centerX();
             float centerY = bounds.centerY();
             int minutes = time.get(Calendar.MINUTE);
+            boolean eventToDisplay = eventFormatter.hasValidEvent(currentTime);
 
             if (drawInEventMode) {
-                if (eventFormatter.hasValidEvent()) {
+                if (eventToDisplay) {
                     eventDrawer.draw(eventFormatter, canvas, innerOvalRadius, centerX, centerY, time.getTimeInMillis());
                 } else {
                     placeholderDrawer.draw(canvas, bounds.width(), centerX, centerY);
@@ -316,7 +316,7 @@ public class GCBWatchFace extends CanvasWatchFaceService {
 
             faceDrawer.draw(minutes);
 
-            if (eventFormatter.hasValidEvent()) {
+            if (eventToDisplay) {
                 indicatorDrawer.draw(eventFormatter.getHourMinutes());
             } else {
                 indicatorDrawer.clearIndication();
@@ -422,13 +422,15 @@ public class GCBWatchFace extends CanvasWatchFaceService {
             }
         }
 
-        private void updateEvent() {
-            Optional<Event> upcomingEvent = eventsManager.getUpcomingEvent();
+        private void handleUpdateEventMessage() {
+            long now = System.currentTimeMillis();
+            Optional<Event> upcomingEvent = eventsManager.getUpcomingEvent(now);
             if (upcomingEvent.isPresent()) {
                 Event event = upcomingEvent.get();
                 eventFormatter.setEvent(event);
-                long delay = event.getStartDate() - (System.currentTimeMillis() % event.getStartDate());
-                engineHandler.sendEmptyMessageDelayed(MSG_UPDATE_EVENT, delay);
+                long delayMs = event.getStartDate() - (now % event.getStartDate());
+                engineHandler.removeMessages(MSG_UPDATE_EVENT);
+                engineHandler.sendEmptyMessageDelayed(MSG_UPDATE_EVENT, delayMs);
             } else {
                 placeholderDrawer.setMessage(noUpcomingEvents);
                 eventFormatter.clearEvent();

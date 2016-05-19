@@ -91,15 +91,15 @@ public class EventsManager {
         }
     }
 
-    public Optional<Event> getUpcomingEvent() {
+    public Optional<Event> getUpcomingEvent(long currentTime) {
         if (events == null || events.size() == 0) {
             return Optional.empty();
         } else {
             Event event = events.get(0);
-            if (event.isValid()) {
+            if (event.isValidRelativeTo(currentTime)) {
                 return Optional.of(event);
             } else {
-                while (events.size() > 0 && !events.get(0).isValid()){
+                while (events.size() > 0 && !events.get(0).isValidRelativeTo(currentTime)){
                     events.remove(0);
                 }
                 if(events.size() > 0){

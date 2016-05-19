@@ -7,7 +7,6 @@ public class Event {
     private long startDate;
     private String title;
     private String calendarDisplayName;
-    private transient TimeProvider timeProvider;
 
     public long getId() {
         return id;
@@ -37,16 +36,8 @@ public class Event {
         return calendarDisplayName;
     }
 
-    void setTimeProvider(TimeProvider timeProvider) {
-        this.timeProvider = timeProvider;
-    }
-
     public void setCalendarDisplayName(String calendarDisplayName) {
         this.calendarDisplayName = calendarDisplayName;
-    }
-
-    public Event() {
-        this.timeProvider = new TimeProvider();
     }
 
     public Event(long id, long startDate, String title, String calendarDisplayName) {
@@ -54,20 +45,13 @@ public class Event {
         this.startDate = startDate;
         this.title = title;
         this.calendarDisplayName = calendarDisplayName;
-        this.timeProvider = new TimeProvider();
     }
 
     public long getMinutesToEvent(long datePointTime){
         return TimeUnit.MILLISECONDS.toMinutes(startDate - datePointTime);
     }
 
-    public boolean isValid(){
-        return startDate > timeProvider.currentTime();
-    }
-
-    static class TimeProvider {
-        long currentTime() {
-            return System.currentTimeMillis();
-        }
+    public boolean isValidRelativeTo(long time){
+        return startDate > time;
     }
 }

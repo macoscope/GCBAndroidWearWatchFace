@@ -14,9 +14,9 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import com.macoscope.gcbwatchface.ColorPalette;
+import com.macoscope.gcbwatchface.R;
 import com.macoscope.gcbwatchface.formatter.EventFormatter;
 import com.macoscope.gcbwatchface.util.MeasureUtil;
-import com.macoscope.gcbwatchface.R;
 
 public class EventDrawer implements Drawer {
     private static final int MAX_TITLE_LINES = 2;
@@ -112,15 +112,12 @@ public class EventDrawer implements Drawer {
 
     public void draw(EventFormatter eventFormatter, Canvas canvas, float radius, float centerX, float centerY,
                      long timeInMillis) {
-        if(eventFormatter.hasValidEvent()) {
-            drawEventName(canvas, bitmapPaint, radius, eventFormatter.getName(), centerX, centerY);
-            drawEventCalendarName(canvas, bitmapPaint, radius, eventFormatter.getCalendarName(), centerX, centerY);
-            canvas.drawText(startsIn, centerX, centerY + startsInHeight, startsInTextPaint);
-            canvas.drawText(eventFormatter.getMinutesToEventString(resources, timeInMillis), centerX, centerY +
-                    startsInHeight + startInMinutesPadding + startInMinutesHeight, minutesTextPaint);
-        }
+        drawEventName(canvas, bitmapPaint, radius, eventFormatter.getName(), centerX, centerY);
+        drawEventCalendarName(canvas, bitmapPaint, radius, eventFormatter.getCalendarName(), centerX, centerY);
+        canvas.drawText(startsIn, centerX, centerY + startsInHeight, startsInTextPaint);
+        canvas.drawText(eventFormatter.getMinutesToEventString(resources, timeInMillis), centerX, centerY +
+                startsInHeight + startInMinutesPadding + startInMinutesHeight, minutesTextPaint);
     }
-
     /**
      * Draw event name above inner oval diameter.
      */

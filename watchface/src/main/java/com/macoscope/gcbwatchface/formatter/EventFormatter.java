@@ -6,13 +6,19 @@ import com.macoscope.gcbwatchface.R;
 import com.macoscpoe.gcbmodel.Event;
 
 import java.util.Calendar;
+import java.util.GregorianCalendar;
+import java.util.TimeZone;
 
 public class EventFormatter {
     private Calendar calendar;
     private Event event;
 
-    public EventFormatter(Calendar calendar) {
-        this.calendar = calendar;
+    public EventFormatter() {
+        this.calendar = new GregorianCalendar();
+    }
+
+    public void setTimeZone(TimeZone timeZone){
+        calendar.setTimeZone(timeZone);
     }
 
     public void setEvent(Event event) {
@@ -41,8 +47,8 @@ public class EventFormatter {
         return calendar.get(Calendar.MINUTE);
     }
 
-    public boolean hasValidEvent() {
-        return event != null && event.isValid();
+    public boolean hasValidEvent(long relativeTime) {
+        return event != null && event.isValidRelativeTo(relativeTime);
     }
 
     public void clearEvent() {
