@@ -14,13 +14,11 @@ public class SyncJobScheduler {
     public void scheduleNewSyncJob(long calendarId, long intervalInMinutes) {
         PersistableBundleCompat extras = new PersistableBundleCompat();
         extras.putLong(SyncJob.KEY_CALENDAR_ID, calendarId);
-        //Send data now
-        scheduleSendDataOnceNow(extras);
-        //Schedule periodic updates
+        runSendDataJob(extras);
         scheduleSendDataPeriodic(extras, intervalInMinutes);
     }
 
-    private void scheduleSendDataOnceNow(PersistableBundleCompat extras) {
+    private void runSendDataJob(PersistableBundleCompat extras) {
         new JobRequest.Builder(SyncJob.TAG_AD_HOC)
                 .setExecutionWindow(EXECUTION_WINDOW_START, EXECUTION_WINDOW_END)
                 .setExtras(extras)
