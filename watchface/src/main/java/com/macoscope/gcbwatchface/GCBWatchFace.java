@@ -428,14 +428,18 @@ public class GCBWatchFace extends CanvasWatchFaceService {
             if (upcomingEvent.isPresent()) {
                 Event event = upcomingEvent.get();
                 eventFormatter.setEvent(event);
-                long delayMs = event.getStartDate() - (now % event.getStartDate());
-                engineHandler.removeMessages(MSG_UPDATE_EVENT);
-                engineHandler.sendEmptyMessageDelayed(MSG_UPDATE_EVENT, delayMs);
+                sendDelayedUpdateEventHandlerMessage(now, event.getStartDate());
             } else {
                 placeholderDrawer.setMessage(noUpcomingEvents);
                 eventFormatter.clearEvent();
             }
             invalidate();
+        }
+
+        private void sendDelayedUpdateEventHandlerMessage(long now, long currentEventStartTime){
+            long delayMs = currentEventStartTime - (now % currentEventStartTime);
+            engineHandler.removeMessages(MSG_UPDATE_EVENT);
+            engineHandler.sendEmptyMessageDelayed(MSG_UPDATE_EVENT, delayMs);
         }
 
         private void handleEventLoadingError() {
