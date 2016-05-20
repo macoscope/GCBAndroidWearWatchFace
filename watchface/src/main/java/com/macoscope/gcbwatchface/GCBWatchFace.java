@@ -423,12 +423,11 @@ public class GCBWatchFace extends CanvasWatchFaceService {
         }
 
         private void handleUpdateEventMessage() {
-            long now = System.currentTimeMillis();
-            Optional<Event> upcomingEvent = eventsManager.getUpcomingEvent(now);
+            Optional<Event> upcomingEvent = eventsManager.getUpcomingEvent(System.currentTimeMillis());
             if (upcomingEvent.isPresent()) {
                 Event event = upcomingEvent.get();
                 eventFormatter.setEvent(event);
-                sendDelayedUpdateEventHandlerMessage(now, event.getStartDate());
+                sendDelayedUpdateEventHandlerMessage(event.getStartDate());
             } else {
                 placeholderDrawer.setMessage(noUpcomingEvents);
                 eventFormatter.clearEvent();
@@ -436,8 +435,8 @@ public class GCBWatchFace extends CanvasWatchFaceService {
             invalidate();
         }
 
-        private void sendDelayedUpdateEventHandlerMessage(long now, long currentEventStartTime){
-            long delayMs = currentEventStartTime - (now % currentEventStartTime);
+        private void sendDelayedUpdateEventHandlerMessage(long currentEventStartTime){
+            long delayMs = currentEventStartTime - (System.currentTimeMillis() % currentEventStartTime);
             engineHandler.removeMessages(MSG_UPDATE_EVENT);
             engineHandler.sendEmptyMessageDelayed(MSG_UPDATE_EVENT, delayMs);
         }
