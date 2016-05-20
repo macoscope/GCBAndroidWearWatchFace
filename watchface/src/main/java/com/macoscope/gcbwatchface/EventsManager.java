@@ -30,6 +30,7 @@ public class EventsManager {
     private Gson gson;
     private Type eventListType = new TypeToken<List<Event>>() {}.getType();
     private List<Event> events;
+    //TODO test it
     private Comparator<Event> eventComparator = new Comparator<Event>() {
         @Override
         public int compare(Event lhs, Event rhs) {
@@ -99,7 +100,7 @@ public class EventsManager {
             if (event.isValidRelativeTo(currentTime)) {
                 return Optional.of(event);
             } else {
-                while (events.size() > 0 && !events.get(0).isValidRelativeTo(currentTime)){
+                while (hasValidEvent(currentTime)){
                     events.remove(0);
                 }
                 if(events.size() > 0){
@@ -109,5 +110,9 @@ public class EventsManager {
                 }
             }
         }
+    }
+
+    private boolean hasValidEvent(long currentTime){
+        return events.size() > 0 && !events.get(0).isValidRelativeTo(currentTime);
     }
 }
