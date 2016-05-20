@@ -55,10 +55,9 @@ public class CalendarRepository {
 
     public Optional<List<CalendarModel>> getCalendars(String account) {
         Uri uri = Calendars.CONTENT_URI;
-        Optional<Cursor> cursorOptional = Optional.ofNullable(contentResolver.query(uri, CALENDAR_PROJECTION,
-                CALENDARS_SELECTION, new String[]{account}, null));
-        if (cursorOptional.isPresent() && cursorOptional.get().getCount() > 0) {
-            Cursor cursor = cursorOptional.get();
+        Cursor cursor = contentResolver.query(uri, CALENDAR_PROJECTION, CALENDARS_SELECTION, new String[]{account},
+                null);
+        if (cursor != null && cursor.getCount() > 0) {
             List<CalendarModel> calendarModels = new ArrayList<>(cursor.getCount());
             while (cursor.moveToNext()) {
                 CalendarModel calendarModel = new CalendarModel(cursor.getLong(PROJECTION_CALENDAR_ID_INDEX),
@@ -74,11 +73,10 @@ public class CalendarRepository {
 
     private Optional<String> getCalendarDisplayName(long calendarId) {
         Uri uri = Calendars.CONTENT_URI;
-        Optional<Cursor> cursorOptional = Optional.ofNullable(contentResolver.query(uri, CALENDAR_PROJECTION,
-                CALENDAR_SELECTION, new String[]{Long.toString(calendarId)}, null));
+        Cursor cursor = contentResolver.query(uri, CALENDAR_PROJECTION, CALENDAR_SELECTION,
+                new String[]{Long.toString(calendarId)}, null);
         Optional<String> calendarName = Optional.empty();
-        if (cursorOptional.isPresent()) {
-            Cursor cursor = cursorOptional.get();
+        if (cursor != null && cursor.getCount() > 0) {
             if (cursor.moveToFirst()) {
                 calendarName = Optional.of(cursor.getString(PROJECTION_CALENDAR_DISPLAY_NAME_INDEX));
             }
@@ -96,11 +94,10 @@ public class CalendarRepository {
         ContentUris.appendId(builder, now);
         ContentUris.appendId(builder, Long.MAX_VALUE);
 
-        Optional<Cursor> cursorOptional = Optional.ofNullable(contentResolver.query(builder.build(), INSTANCE_PROJECTION,
+        Cursor cursor = contentResolver.query(builder.build(), INSTANCE_PROJECTION,
                 INSTANCE_SELECTION, new String[]{Long.toString(calendarId), Long.toString(now), Long.toString(timeTo)},
-                INSTANCE_ORDER));
-        if (cursorOptional.isPresent() && cursorOptional.get().getCount() > 0) {
-            Cursor cursor = cursorOptional.get();
+                INSTANCE_ORDER);
+        if (cursor != null && cursor.getCount() > 0) {
             List<Event> events = new ArrayList<>(cursor.getCount());
             while (cursor.moveToNext()) {
                 Event event = new Event(cursor.getLong(PROJECTION_INSTANCE_ID_INDEX),
