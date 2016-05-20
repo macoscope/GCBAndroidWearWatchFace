@@ -33,18 +33,15 @@ class SyncJob extends Job {
 
         if (!isCanceled()) {
             CalendarRepository calendarRepository = new CalendarRepository(getContext().getContentResolver());
-            if(calendarId != -1){
+            if (calendarId != -1) {
                 Optional<List<Event>> eventsOptional = calendarRepository.getEvents(calendarId,
                         MINUTES_LIMIT_FOR_UPCOMING_EVENTS, TimeUnit.MINUTES);
-                if(eventsOptional.isPresent()){
+                if (eventsOptional.isPresent()) {
                     sendEvents(eventsOptional.get());
-                } else {
-                    sendEvents(new ArrayList<Event>());
+                    return Result.SUCCESS;
                 }
-            } else {
-                sendEvents(new ArrayList<Event>());
             }
-
+            sendEvents(new ArrayList<Event>());
         }
         return Result.SUCCESS;
     }
