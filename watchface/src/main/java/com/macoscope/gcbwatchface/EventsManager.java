@@ -2,6 +2,7 @@ package com.macoscope.gcbwatchface;
 
 
 import android.content.Context;
+import android.support.annotation.VisibleForTesting;
 import android.text.TextUtils;
 
 import com.eccyan.optional.Optional;
@@ -30,8 +31,8 @@ public class EventsManager {
     private Gson gson;
     private Type eventListType = new TypeToken<List<Event>>() {}.getType();
     private List<Event> events;
-    //TODO test it
-    private Comparator<Event> eventComparator = new Comparator<Event>() {
+
+    private static Comparator<Event> eventComparator = new Comparator<Event>() {
         @Override
         public int compare(Event lhs, Event rhs) {
             if(lhs.getStartDate() < rhs.getStartDate()){
@@ -43,6 +44,8 @@ public class EventsManager {
             }
         }
     };
+    @VisibleForTesting
+    private EventsManager(){}
 
     public EventsManager(Context context) {
         RxWear.init(context);
