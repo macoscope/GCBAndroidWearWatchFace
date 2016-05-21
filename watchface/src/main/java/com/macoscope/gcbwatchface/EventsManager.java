@@ -9,8 +9,8 @@ import com.eccyan.optional.Optional;
 import com.google.android.gms.wearable.DataMap;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
-import com.macoscpoe.gcbmodel.CommunicationConfig;
-import com.macoscpoe.gcbmodel.Event;
+import com.macoscope.gcbmodel.CommunicationConfig;
+import com.macoscope.gcbmodel.Event;
 import com.patloew.rxwear.RxWear;
 import com.patloew.rxwear.transformers.MessageEventGetDataMap;
 

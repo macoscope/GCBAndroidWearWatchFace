@@ -1,4 +1,4 @@
-package com.macoscpoe.gcbmodel;
+package com.macoscope.gcbmodel;
 
 public class CommunicationConfig {
     public static final String EVENTS_LIST_PATH = "/eventsList";

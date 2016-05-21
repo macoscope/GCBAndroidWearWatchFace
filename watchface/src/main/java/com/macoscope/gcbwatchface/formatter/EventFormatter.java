@@ -3,7 +3,7 @@ package com.macoscope.gcbwatchface.formatter;
 import android.content.res.Resources;
 
 import com.macoscope.gcbwatchface.R;
-import com.macoscpoe.gcbmodel.Event;
+import com.macoscope.gcbmodel.Event;
 
 import java.util.Calendar;
 import java.util.GregorianCalendar;

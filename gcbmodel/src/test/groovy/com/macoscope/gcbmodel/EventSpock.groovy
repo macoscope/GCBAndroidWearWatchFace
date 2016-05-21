@@ -1,4 +1,4 @@
-package com.macoscpoe.gcbmodel
+package com.macoscope.gcbmodel
 
 import spock.lang.Specification
 

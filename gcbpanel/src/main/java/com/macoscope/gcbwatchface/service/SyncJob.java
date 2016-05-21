@@ -8,8 +8,8 @@ import com.evernote.android.job.Job;
 import com.evernote.android.job.util.support.PersistableBundleCompat;
 import com.google.gson.Gson;
 import com.macoscope.gcbwatchface.CalendarRepository;
-import com.macoscpoe.gcbmodel.CommunicationConfig;
-import com.macoscpoe.gcbmodel.Event;
+import com.macoscope.gcbmodel.CommunicationConfig;
+import com.macoscope.gcbmodel.Event;
 import com.patloew.rxwear.GoogleAPIConnectionException;
 import com.patloew.rxwear.RxWear;
 

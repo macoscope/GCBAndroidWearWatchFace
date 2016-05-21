@@ -25,7 +25,7 @@ import com.macoscope.gcbwatchface.drawer.HourDrawer;
 import com.macoscope.gcbwatchface.drawer.PlaceholderDrawer;
 import com.macoscope.gcbwatchface.formatter.EventFormatter;
 import com.macoscope.gcbwatchface.util.MeasureUtil;
-import com.macoscpoe.gcbmodel.Event;
+import com.macoscope.gcbmodel.Event;
 
 import java.lang.ref.WeakReference;
 import java.util.Calendar;

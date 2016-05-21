@@ -1,7 +1,7 @@
 package com.macoscope.gcbwatchface
 
 import com.eccyan.optional.Optional
-import com.macoscpoe.gcbmodel.Event
+import com.macoscope.gcbmodel.Event
 import spock.lang.Specification
 
 class EventsManagerTest extends Specification {
