@@ -36,6 +36,9 @@ public class EventDrawer implements Drawer {
     private int calendarNameOffset;
 
     private Resources resources;
+    private int eventNameHeight;
+    private int desiredEventNameWidth;
+    private int calendarDesiredWidth;
 
     public EventDrawer(Context context, Typeface typefaceLight, ColorPalette colorPalette, Paint bitmapPaint) {
         this.bitmapPaint = bitmapPaint;
@@ -110,41 +113,46 @@ public class EventDrawer implements Drawer {
         startInMinutesHeight = textBounds.height();
     }
 
-    public void draw(EventFormatter eventFormatter, Canvas canvas, float radius, float centerX, float centerY,
-                     long timeInMillis) {
-        drawEventName(canvas, bitmapPaint, radius, eventFormatter.getName(), centerX, centerY);
-        drawEventCalendarName(canvas, bitmapPaint, radius, eventFormatter.getCalendarName(), centerX, centerY);
+    public void measure(float radius){
+        eventNameHeight = measureTextViewHeight(eventNameTextView);
+        desiredEventNameWidth = (int) Math.sqrt(radius * radius - Math.pow(eventNameHeight, 2)) * 2;
+        applyDesiredWidth(eventNameTextView, desiredEventNameWidth);
+
+        int calendarMeasuredHeight = measureTextViewHeight(eventCalendarTextView);
+        float top = calendarNameOffset + calendarMeasuredHeight;
+        calendarDesiredWidth = (int) Math.sqrt(radius * radius + top * top);
+        applyDesiredWidth(eventCalendarTextView, calendarDesiredWidth);
+    }
+
+    public void draw(EventFormatter eventFormatter, Canvas canvas, float centerX, float centerY, long timeInMillis) {
+        drawEventName(canvas, bitmapPaint, eventFormatter.getName(), centerX, centerY);
+        drawEventCalendarName(canvas, bitmapPaint, eventFormatter.getCalendarName(), centerX, centerY);
         canvas.drawText(startsIn, centerX, centerY + startsInHeight, startsInTextPaint);
         canvas.drawText(eventFormatter.getMinutesToEventString(resources, timeInMillis), centerX, centerY +
                 startsInHeight + startInMinutesPadding + startInMinutesHeight, minutesTextPaint);
     }
+    
     /**
      * Draw event name above inner oval diameter.
      */
-    private void drawEventName(Canvas canvas, Paint bitmapPaint, float radius, CharSequence eventName,
+    private void drawEventName(Canvas canvas, Paint bitmapPaint, CharSequence eventName,
                                float centerX, float centerY) {
         eventNameTextView.setText(eventName);
         eventNameTextView.setDrawingCacheEnabled(true);
-        int measuredHeight = measureTextViewHeight(eventNameTextView);
-        int desiredWidth = (int) Math.sqrt(Math.pow(radius, 2) - Math.pow(measuredHeight, 2)) * 2;
-        applyDesiredWidth(eventNameTextView, desiredWidth);
         if (eventNameTextView.getDrawingCache() != null) {
-            canvas.drawBitmap(eventNameTextView.getDrawingCache(), centerX - desiredWidth / 2,
-                    centerY - measuredHeight, bitmapPaint);
+            canvas.drawBitmap(eventNameTextView.getDrawingCache(), centerX - desiredEventNameWidth / 2,
+                    centerY - eventNameHeight, bitmapPaint);
         }
         eventNameTextView.setDrawingCacheEnabled(false);
     }
 
-    private void drawEventCalendarName(Canvas canvas, Paint bitmapPaint, float radius, CharSequence calendarName,
+    private void drawEventCalendarName(Canvas canvas, Paint bitmapPaint, CharSequence calendarName,
                                        float centerX, float centerY) {
         eventCalendarTextView.setText(calendarName);
         eventCalendarTextView.setDrawingCacheEnabled(true);
-        int measuredHeight = measureTextViewHeight(eventCalendarTextView);
-        float top = calendarNameOffset + measuredHeight;
-        int desiredWidth = (int) Math.sqrt(radius * radius + top * top);
-        applyDesiredWidth(eventCalendarTextView, desiredWidth);
+
         if (eventCalendarTextView.getDrawingCache() != null) {
-            canvas.drawBitmap(eventCalendarTextView.getDrawingCache(), centerX - desiredWidth / 2,
+            canvas.drawBitmap(eventCalendarTextView.getDrawingCache(), centerX - calendarDesiredWidth / 2,
                     centerY + calendarNameOffset, bitmapPaint);
         }
         eventCalendarTextView.setDrawingCacheEnabled(false);

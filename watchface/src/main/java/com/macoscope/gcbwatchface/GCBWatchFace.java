@@ -304,7 +304,7 @@ public class GCBWatchFace extends CanvasWatchFaceService {
 
             if (drawInEventMode) {
                 if (eventToDisplay) {
-                    eventDrawer.draw(eventFormatter, canvas, innerOvalRadius, centerX, centerY, time.getTimeInMillis());
+                    eventDrawer.draw(eventFormatter, canvas, centerX, centerY, time.getTimeInMillis());
                 } else {
                     placeholderDrawer.draw(canvas, bounds.width(), centerX, centerY);
                 }
@@ -330,6 +330,7 @@ public class GCBWatchFace extends CanvasWatchFaceService {
             setInnerOval(outerOval);
             innerOvalRadius = innerOval.width() / 2;
             indicatorDrawer.measure(faceBitmap, innerOval);
+            eventDrawer.measure(innerOvalRadius);
         }
 
         private void setInnerOval(RectF outerOval){

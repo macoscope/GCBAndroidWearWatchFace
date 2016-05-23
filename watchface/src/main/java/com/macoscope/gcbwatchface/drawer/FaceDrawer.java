@@ -46,7 +46,7 @@ public class FaceDrawer implements Drawer {
     private void initGradientPaint(float strokeSize) {
         gradientPaint = new Paint();
         gradientPaint.setAntiAlias(true);
-        // gradient set in onDraw
+        // gradient set in measure
         gradientPaint.setStrokeWidth(strokeSize);
         gradientPaint.setStyle(Paint.Style.STROKE);
         dashedCirclePaintWrapper = new DashedCirclePaintWrapper(gradientPaint);
