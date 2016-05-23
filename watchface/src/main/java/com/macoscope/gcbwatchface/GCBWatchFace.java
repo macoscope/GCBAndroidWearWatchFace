@@ -45,12 +45,12 @@ public class GCBWatchFace extends CanvasWatchFaceService {
     /**
      * Handler message id for updating the time periodically in interactive mode.
      */
-    private static final int MSG_UPDATE_TIME = 0;
+    private static final int MSG_UPDATE_TIME = 1;
 
     /**
      * Handler message id for updating the event.
      */
-    private static final int MSG_UPDATE_EVENT = 1;
+    private static final int MSG_UPDATE_EVENT = 2;
 
     @Override
     public GCBWatchFaceEngine onCreateEngine() {
@@ -226,7 +226,6 @@ public class GCBWatchFace extends CanvasWatchFaceService {
 
         private void initBitmapPaint() {
             bitmapPaint = new Paint();
-            bitmapPaint.setAntiAlias(true);
             bitmapPaint.setFilterBitmap(true);
         }
 
@@ -261,7 +260,6 @@ public class GCBWatchFace extends CanvasWatchFaceService {
                     indicatorDrawer.setAmbientMode(inAmbientMode);
                     placeholderDrawer.setAmbientMode(inAmbientMode);
 
-                    bitmapPaint.setAntiAlias(!inAmbientMode);
                     bitmapPaint.setFilterBitmap(!inAmbientMode);
                 }
                 invalidate();
