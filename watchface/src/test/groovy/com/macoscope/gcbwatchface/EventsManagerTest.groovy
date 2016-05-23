@@ -5,7 +5,7 @@ import com.macoscope.gcbmodel.Event
 import spock.lang.Specification
 
 class EventsManagerTest extends Specification {
-    def "should return first upcoming event from mixed (valid and invalid) events "() {
+    def "should return first upcoming event with time in future"() {
         given:
         long now = System.currentTimeMillis()
         List<Event> events = new ArrayList<>();

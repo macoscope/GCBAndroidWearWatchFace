@@ -2,8 +2,8 @@ package com.macoscope.gcbwatchface.formatter;
 
 import android.content.res.Resources;
 
-import com.macoscope.gcbwatchface.R;
 import com.macoscope.gcbmodel.Event;
+import com.macoscope.gcbwatchface.R;
 
 import java.util.Calendar;
 import java.util.GregorianCalendar;
@@ -47,8 +47,8 @@ public class EventFormatter {
         return calendar.get(Calendar.MINUTE);
     }
 
-    public boolean hasValidEvent(long relativeTime) {
-        return event != null && event.isValidRelativeTo(relativeTime);
+    public boolean hasEvent() {
+        return event != null;
     }
 
     public void clearEvent() {

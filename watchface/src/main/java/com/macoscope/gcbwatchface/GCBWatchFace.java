@@ -18,6 +18,7 @@ import android.support.wearable.watchface.WatchFaceStyle;
 import android.view.SurfaceHolder;
 
 import com.eccyan.optional.Optional;
+import com.macoscope.gcbmodel.Event;
 import com.macoscope.gcbwatchface.drawer.EventDrawer;
 import com.macoscope.gcbwatchface.drawer.EventIndicatorDrawer;
 import com.macoscope.gcbwatchface.drawer.FaceDrawer;
@@ -25,7 +26,6 @@ import com.macoscope.gcbwatchface.drawer.HourDrawer;
 import com.macoscope.gcbwatchface.drawer.PlaceholderDrawer;
 import com.macoscope.gcbwatchface.formatter.EventFormatter;
 import com.macoscope.gcbwatchface.util.MeasureUtil;
-import com.macoscope.gcbmodel.Event;
 
 import java.lang.ref.WeakReference;
 import java.util.Calendar;
@@ -302,7 +302,7 @@ public class GCBWatchFace extends CanvasWatchFaceService {
             float centerX = bounds.centerX();
             float centerY = bounds.centerY();
             int minutes = time.get(Calendar.MINUTE);
-            boolean eventToDisplay = eventFormatter.hasValidEvent(currentTime);
+            boolean eventToDisplay = eventFormatter.hasEvent();
 
             if (drawInEventMode) {
                 if (eventToDisplay) {
