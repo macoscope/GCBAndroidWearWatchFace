@@ -64,11 +64,8 @@ public class FaceDrawer implements Drawer {
         float ovalHeight = height - padding * 2 + stroke * 2;
         centerX = ovalWidth / 2;
         centerY = ovalHeight / 2;
-
         oval = outerOval;
-
         faceCanvas = new Canvas(faceBitmap);
-
         gradientPaint.setShader(new SweepGradient(centerX, centerY, colorPalette.ovalGradient, OVAL_GRADIENT_POSITION));
 
         outerOval.set(stroke, stroke, ovalWidth - stroke, ovalHeight - stroke);

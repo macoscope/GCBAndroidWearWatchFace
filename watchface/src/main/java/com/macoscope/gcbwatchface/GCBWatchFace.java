@@ -259,7 +259,6 @@ public class GCBWatchFace extends CanvasWatchFaceService {
                     eventDrawer.setAmbientMode(inAmbientMode);
                     indicatorDrawer.setAmbientMode(inAmbientMode);
                     placeholderDrawer.setAmbientMode(inAmbientMode);
-
                     bitmapPaint.setFilterBitmap(!inAmbientMode);
                 }
                 invalidate();

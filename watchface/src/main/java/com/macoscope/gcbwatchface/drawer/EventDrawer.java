@@ -131,12 +131,11 @@ public class EventDrawer implements Drawer {
         canvas.drawText(eventFormatter.getMinutesToEventString(resources, timeInMillis), centerX, centerY +
                 startsInHeight + startInMinutesPadding + startInMinutesHeight, minutesTextPaint);
     }
-    
+
     /**
      * Draw event name above inner oval diameter.
      */
-    private void drawEventName(Canvas canvas, Paint bitmapPaint, CharSequence eventName,
-                               float centerX, float centerY) {
+    private void drawEventName(Canvas canvas, Paint bitmapPaint, CharSequence eventName, float centerX, float centerY) {
         eventNameTextView.setText(eventName);
         eventNameTextView.setDrawingCacheEnabled(true);
         if (eventNameTextView.getDrawingCache() != null) {
