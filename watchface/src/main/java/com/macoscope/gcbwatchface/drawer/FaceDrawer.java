@@ -35,6 +35,9 @@ public class FaceDrawer implements Drawer {
     private float centerY;
     private float ovalRotation;
 
+    @VisibleForTesting
+    private FaceDrawer(){}
+
     public FaceDrawer(ColorPalette colorPalette, float padding, float strokeSize) {
         this.padding = padding;
         this.colorPalette = colorPalette;
@@ -82,7 +85,6 @@ public class FaceDrawer implements Drawer {
         faceCanvas.drawArc(arcRect, OVAL_ANGLE_OFFSET, getSwapAngle(minutes), true, arcPaint);
     }
 
-    //TODO Test it
     @VisibleForTesting
     private int getSwapAngle(int minutes) {
         if (minutes >= 30) {

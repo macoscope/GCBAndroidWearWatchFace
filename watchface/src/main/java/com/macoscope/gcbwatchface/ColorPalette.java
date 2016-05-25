@@ -1,6 +1,7 @@
 package com.macoscope.gcbwatchface;
 
 import android.content.Context;
+import android.support.annotation.VisibleForTesting;
 import android.support.v4.content.ContextCompat;
 
 public class ColorPalette {
@@ -14,6 +15,9 @@ public class ColorPalette {
     public int colorGray;
     public int[] ovalGradient;
 
+    @VisibleForTesting
+    private ColorPalette(){}
+
     public ColorPalette(Context context) {
         backgroundColor = ContextCompat.getColor(context, R.color.background);
         colorSoftBlue = ContextCompat.getColor(context, R.color.soft_blue);
@@ -25,7 +29,6 @@ public class ColorPalette {
         colorGray = ContextCompat.getColor(context, R.color.grey_font);
         ovalGradient = new int[]{colorGreenBlue, colorSoftBlue, colorBlush, colorLipstick, colorGreenBlue};
     }
-    //TODO Test it
     public int getHourColor(int minutes) {
         return minutes < 30 ? colorGreenBlue : colorLipstick;
     }

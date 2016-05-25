@@ -23,6 +23,9 @@ public class EventIndicatorDrawer implements Drawer {
     private RectF arcRect;
     private float ovalRotation;
 
+    @VisibleForTesting
+    private EventIndicatorDrawer(){}
+
     public EventIndicatorDrawer(ColorPalette colorPalette, float innerStrokeSize) {
         this.innerStrokeSize = innerStrokeSize;
         this.arcRect = new RectF();
@@ -72,7 +75,6 @@ public class EventIndicatorDrawer implements Drawer {
         indicatorCanvas.drawOval(arcRect, innerArcPaint);
     }
 
-    //TODO Test it
     @VisibleForTesting
     private float getStartAngle(int minutes) {
         return minutes == 0 ? -60 : (minutes * 6 / 30) * 30 - 60;
