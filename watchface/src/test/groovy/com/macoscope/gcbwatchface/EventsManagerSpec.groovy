@@ -4,7 +4,7 @@ import com.eccyan.optional.Optional
 import com.macoscope.gcbmodel.Event
 import spock.lang.Specification
 
-class EventsManagerTest extends Specification {
+class EventsManagerSpec extends Specification {
     def "should return first upcoming event with time in future"() {
         given:
         long now = System.currentTimeMillis()

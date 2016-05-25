@@ -5,7 +5,7 @@ import spock.lang.Shared
 import spock.lang.Specification
 import spock.lang.Unroll
 
-class HourFormatterSpock extends Specification {
+class HourFormatterSpec extends Specification {
 
     @Shared
     Calendar calendar = new GregorianCalendar()

@@ -4,7 +4,7 @@ import spock.lang.Specification
 
 import java.util.concurrent.TimeUnit
 
-class EventSpock extends Specification {
+class EventSpec extends Specification {
     def "Should return proper amount of minutes to upcoming event"() {
         given:
         long now = System.currentTimeMillis()
