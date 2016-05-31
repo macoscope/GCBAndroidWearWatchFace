@@ -32,6 +32,18 @@ public class EventsManager {
     private Type eventListType = new TypeToken<List<Event>>() {}.getType();
     private List<Event> events;
 
+    private Func1 dataMapToEventsListFunction = new Func1<DataMap, List<Event>>() {
+        @Override
+        public List<Event> call(DataMap dataMap) {
+            String json = dataMap.getString(CommunicationConfig.EVENTS_LIST_DATA_KEY);
+            if (TextUtils.isEmpty(json)) {
+                return new ArrayList<>();
+            } else {
+                return gson.fromJson(json, eventListType);
+            }
+        }
+    };
+
     private static Comparator<Event> eventComparator = new Comparator<Event>() {
         @Override
         public int compare(Event lhs, Event rhs) {
@@ -57,23 +69,13 @@ public class EventsManager {
         compositeSubscription = new CompositeSubscription();
         Subscription subscription = RxWear.Message.listen()
                 .compose(MessageEventGetDataMap.filterByPath(CommunicationConfig.EVENTS_LIST_PATH))
-                .map(new Func1<DataMap, List<Event>>() {
-                    @Override
-                    public List<Event> call(DataMap dataMap) {
-                        String json = dataMap.getString(CommunicationConfig.EVENTS_LIST_DATA_KEY);
-                        if (TextUtils.isEmpty(json)) {
-                            return new ArrayList<>();
-                        } else {
-                            return gson.fromJson(json, eventListType);
-                        }
-                    }
-                })
+                .map(dataMapToEventsListFunction)
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(new Action1<List<Event>>() {
                     @Override
                     public void call(List<Event> events) {
                         Collections.sort(events, eventComparator);
-                        eventsLoaded(events);
+                        setEvents(events);
                         listener.onEventsListChanged();
                     }
                 }, new Action1<Throwable>() {
@@ -85,7 +87,7 @@ public class EventsManager {
         compositeSubscription.add(subscription);
     }
 
-    private void eventsLoaded(List<Event> events) {
+    private void setEvents(List<Event> events) {
         this.events = events;
     }
 
