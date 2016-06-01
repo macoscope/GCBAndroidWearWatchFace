@@ -36,7 +36,8 @@ public class FaceDrawer implements Drawer {
     private float ovalRotation;
 
     @VisibleForTesting
-    private FaceDrawer(){}
+    private FaceDrawer() {
+    }
 
     public FaceDrawer(ColorPalette colorPalette, float padding, float strokeSize) {
         this.padding = padding;
