@@ -24,7 +24,8 @@ public class EventIndicatorDrawer implements Drawer {
     private float ovalRotation;
 
     @VisibleForTesting
-    private EventIndicatorDrawer(){}
+    private EventIndicatorDrawer() {
+    }
 
     public EventIndicatorDrawer(ColorPalette colorPalette, float innerStrokeSize) {
         this.innerStrokeSize = innerStrokeSize;

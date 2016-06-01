@@ -16,7 +16,8 @@ public class ColorPalette {
     public int[] ovalGradient;
 
     @VisibleForTesting
-    private ColorPalette(){}
+    private ColorPalette() {
+    }
 
     public ColorPalette(Context context) {
         backgroundColor = ContextCompat.getColor(context, R.color.background);
@@ -29,6 +30,7 @@ public class ColorPalette {
         colorGray = ContextCompat.getColor(context, R.color.grey_font);
         ovalGradient = new int[]{colorGreenBlue, colorSoftBlue, colorBlush, colorLipstick, colorGreenBlue};
     }
+
     public int getHourColor(int minutes) {
         return minutes < 30 ? colorGreenBlue : colorLipstick;
     }
