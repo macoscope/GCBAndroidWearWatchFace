@@ -1,4 +1,4 @@
-# GCBAndroidWearWatchFace
+# GCB Android Wear Watch Face
 
 General purpose of GCB Android Wear Watch Face is displaying upcoming event directly on your wearable - from now on you never forgot about important meeting!  Of course GCB Watch Face have also time indication :) Project was described in two blog posts: [post part 1](http://macoscope.com/blog/) and [post part 2](http://macoscope.com/blog/)
 
@@ -16,7 +16,7 @@ In time mode watch display in center current hour for hours with elapsed no more
 
 In event mode watch face display upcoming event with information such as event title, minutes to event start and calendar name from which event is taken.
 
-![Time indicator](screenshots/event-indicator.png)
+![Event indicator](screenshots/event-indicator.png)
 
 Code of watch face is placed in [watchface](https://github.com/macoscope/GCBAndroidWearWatchFace/tree/master/watchface) module.
 
@@ -33,6 +33,6 @@ Is responsible for querying events periodically from selected user’s calendar 
 ## Copyright
 
 ```
-Copyright 2016  Macoscope Sp. z o.o.Licensed under the Apache License, Version 2.0 (the "License");you may not use this file except in compliance with the License.You may obtain a copy of the License at    http://www.apache.org/licenses/LICENSE-2.0Unless required by applicable law or agreed to in writing, softwaredistributed under the License is distributed on an "AS IS" BASIS,WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.See the License for the specific language governing permissions andlimitations under the License.
+Copyright 2016 Macoscope Sp. z o.o.Licensed under the Apache License, Version 2.0 (the "License");you may not use this file except in compliance with the License.You may obtain a copy of the License at    http://www.apache.org/licenses/LICENSE-2.0Unless required by applicable law or agreed to in writing, softwaredistributed under the License is distributed on an "AS IS" BASIS,WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.See the License for the specific language governing permissions andlimitations under the License.
 ```
 
