@@ -26,7 +26,7 @@ dependencies {
     compile 'com.google.apis:google-api-services-calendar:v3-rev180-1.21.0'
     compile 'io.reactivex:rxjava:1.1.5'
     compile 'io.reactivex:rxandroid:1.2.0'
-    compile 'com.github.macoscope:RxJava-Optional:e5349bff43'
+    compile 'com.eccyan:rxjava-optional:1.1.0'
     compile 'com.patloew.rxwear:rxwear:1.1.0'
     compile 'com.google.code.gson:gson:2.6.2'
     testCompile 'org.robospock:robospock:1.0.0'

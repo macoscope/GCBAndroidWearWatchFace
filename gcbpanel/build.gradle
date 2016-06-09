@@ -28,7 +28,7 @@ dependencies {
     compile 'pub.devrel:easypermissions:0.1.5'
     compile 'io.reactivex:rxjava:1.1.5'
     compile 'io.reactivex:rxandroid:1.2.0'
-    compile 'com.github.macoscope:RxJava-Optional:e5349bff43'
+    compile 'com.eccyan:rxjava-optional:1.1.0'
     compile 'com.google.code.gson:gson:2.6.2'
     compile 'com.patloew.rxwear:rxwear:1.1.0'
     compile 'com.evernote:android-job:1.0.5'
