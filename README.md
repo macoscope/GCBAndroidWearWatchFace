@@ -1,6 +1,6 @@
 # GCB Android Wear Watch Face
 
-General purpose of GCB Android Wear Watch Face is displaying upcoming event directly on your wearable - from now on you never forgot about important meeting!  Of course GCB Watch Face have also time indication :-) Project was described in two blog posts: [Drawing Android Wear GCB Watch Face](http://http://macoscope.com/blog/drawing-android-wear-gcb-watch-face/) and part 2 (coming soon!)
+General purpose of GCB Android Wear Watch Face is displaying upcoming event directly on your wearable - from now on you will never forget about important meeting!  Of course GCB Watch Face have also time indication :-) Project was described in two blog posts: [Drawing Android Wear GCB Watch Face](http://http://macoscope.com/blog/drawing-android-wear-gcb-watch-face/) and part 2 (coming soon!)
 
 ![GCB Watch Face](screenshots/GCBWatchFace.png)
 
@@ -22,7 +22,7 @@ Code of watch face is placed in [watchface](https://github.com/macoscope/GCBAndr
 
 ## Handheld App (Watch Face Settings)
 
-Is responsible for querying events periodically from selected user’s calendar and sending them to wearable device. User can choose account, calendar for synchronisation and time interval for periodic watch face updates. Codebase of handheld app can be found in [gcbpanel](https://github.com/macoscope/GCBAndroidWearWatchFace/tree/master/gcbpanel) module.
+Handheld App is responsible for querying events periodically from selected user’s calendar and sending them to wearable device. User can choose account, calendar for synchronisation and time interval for periodic watch face updates. Codebase of handheld app can be found in [gcbpanel](https://github.com/macoscope/GCBAndroidWearWatchFace/tree/master/gcbpanel) module.
 
 ## Credits
 
