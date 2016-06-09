@@ -20,6 +20,7 @@ import com.google.api.services.calendar.CalendarScopes;
 import com.macoscope.gcbwatchface.service.SyncJobScheduler;
 
 import java.util.Arrays;
+import java.util.List;
 
 import pub.devrel.easypermissions.AfterPermissionGranted;
 import pub.devrel.easypermissions.EasyPermissions;
@@ -215,8 +216,8 @@ public class SyncPreferencesPresenter {
     }
 
     private void initCredentials() {
-        googleAccountCredential = GoogleAccountCredential.usingOAuth2(
-                context.getApplicationContext(), Arrays.asList(SCOPES))
+        googleAccountCredential = GoogleAccountCredential
+                .usingOAuth2(context.getApplicationContext(), Arrays.asList(SCOPES))
                 .setBackOff(new ExponentialBackOff());
         String accountName = sharedPreferences.getString(accountPreference.getKey(), null);
         if (accountName != null) {
@@ -279,11 +280,8 @@ public class SyncPreferencesPresenter {
                     googleAccountCredential.newChooseAccountIntent(),
                     REQUEST_ACCOUNT_PICKER);
         } else {
-            EasyPermissions.requestPermissions(
-                    context,
-                    context.getString(R.string.account_permissions),
-                    REQUEST_PERMISSION_GET_ACCOUNTS,
-                    Manifest.permission.GET_ACCOUNTS);
+            syncPreferencesView.requestEasyPermissions(REQUEST_PERMISSION_GET_ACCOUNTS,
+                    Manifest.permission.GET_ACCOUNTS, R.string.account_permissions);
         }
     }
 
@@ -318,11 +316,8 @@ public class SyncPreferencesPresenter {
         if (EasyPermissions.hasPermissions(context, Manifest.permission.READ_CALENDAR)) {
             loadAvailableCalendars(initial);
         } else {
-            EasyPermissions.requestPermissions(
-                    context,
-                    context.getString(R.string.read_calendar_permissions),
-                    REQUEST_PERMISSION_READ_CALENDAR,
-                    Manifest.permission.READ_CALENDAR);
+            syncPreferencesView.requestEasyPermissions(REQUEST_PERMISSION_READ_CALENDAR,
+                    Manifest.permission.READ_CALENDAR, R.string.read_calendar_permissions);
         }
     }
 
@@ -339,7 +334,7 @@ public class SyncPreferencesPresenter {
                         public void call(Optional<Pair<CharSequence[], CharSequence[]>> pairOptional) {
                             if (pairOptional.isPresent()) {
                                 bindCalendarsToPreferenceList(pairOptional.get());
-                                if(initial) {
+                                if (initial) {
                                     restoreCalendarsSummary();
                                 }
                             } else {
@@ -391,5 +386,26 @@ public class SyncPreferencesPresenter {
     private void setCalendarsPreference(CharSequence[] entries, CharSequence[] values) {
         calendarListPreference.setEntries(entries);
         calendarListPreference.setEntryValues(values);
+    }
+
+    public void onPermissionsGranted(int requestCode, List<String> perms) {
+        onPermissionsChanged(requestCode, perms);
+    }
+
+    public void onPermissionsDenied(int requestCode, List<String> perms) {
+        onPermissionsChanged(requestCode, perms);
+    }
+
+    private void onPermissionsChanged(int requestCode, List<String> perms) {
+        switch (requestCode) {
+            case REQUEST_PERMISSION_GET_ACCOUNTS: {
+                chooseAccountIfGooglePlayServicesAvailable();
+                break;
+            }
+            case REQUEST_PERMISSION_READ_CALENDAR: {
+                loadAvailableCalendarsIfPermissionsGranted(true);
+                break;
+            }
+        }
     }
 }

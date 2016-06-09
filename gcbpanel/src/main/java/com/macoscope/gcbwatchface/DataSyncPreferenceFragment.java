@@ -10,7 +10,12 @@ import android.support.design.widget.Snackbar;
 
 import com.google.android.gms.common.GoogleApiAvailability;
 
-public class DataSyncPreferenceFragment extends PreferenceFragment implements SyncPreferencesView {
+import java.util.List;
+
+import pub.devrel.easypermissions.EasyPermissions;
+
+public class DataSyncPreferenceFragment extends PreferenceFragment implements SyncPreferencesView,
+        EasyPermissions.PermissionCallbacks {
 
     private SyncPreferencesPresenter syncPreferencesPresenter;
 
@@ -62,8 +67,26 @@ public class DataSyncPreferenceFragment extends PreferenceFragment implements Sy
         showMessage(getString(resourceId));
     }
 
+
     @Override
     public void startRequestAccountActivityForResult(Intent intent, int requestCode) {
         startActivityForResult(intent, requestCode);
     }
+
+    @Override
+    public void requestEasyPermissions(int requestCode, String permission, int messageResourceId) {
+        EasyPermissions.requestPermissions(this, getString(messageResourceId), requestCode, permission);
+    }
+
+    @Override
+    public void onPermissionsGranted(int requestCode, List<String> perms) {
+        syncPreferencesPresenter.onPermissionsGranted(requestCode, perms);
+    }
+
+    @Override
+    public void onPermissionsDenied(int requestCode, List<String> perms) {
+        syncPreferencesPresenter.onPermissionsDenied(requestCode, perms);
+    }
+
+
 }
