@@ -1,6 +1,6 @@
 # GCB Android Wear Watch Face
 
-General purpose of GCB Android Wear Watch Face is displaying upcoming event directly on your wearable - from now on you never forgot about important meeting!  Of course GCB Watch Face have also time indication :) Project was described in two blog posts: [post part 1](http://macoscope.com/blog/) and [post part 2](http://macoscope.com/blog/)
+General purpose of GCB Android Wear Watch Face is displaying upcoming event directly on your wearable - from now on you never forgot about important meeting!  Of course GCB Watch Face have also time indication :-) Project was described in two blog posts: [Drawing Android Wear GCB Watch Face](http://http://macoscope.com/blog/drawing-android-wear-gcb-watch-face/) and part 2 (coming soon!)
 
 ![GCB Watch Face](screenshots/GCBWatchFace.png)
 
@@ -22,12 +22,12 @@ Code of watch face is placed in [watchface](https://github.com/macoscope/GCBAndr
 
 ## Handheld App (Watch Face Settings)
 
-Is responsible for querying events periodically from selected user’s calendar and sending them to wearable device. User can choose account, calendar for synchronization and time interval for periodic watch face updates. Codebase of handheld app can be found in [gcbpanel](https://github.com/macoscope/GCBAndroidWearWatchFace/tree/master/gcbpanel) module.
+Is responsible for querying events periodically from selected user’s calendar and sending them to wearable device. User can choose account, calendar for synchronisation and time interval for periodic watch face updates. Codebase of handheld app can be found in [gcbpanel](https://github.com/macoscope/GCBAndroidWearWatchFace/tree/master/gcbpanel) module.
 
 ## Credits
 
 - Reactive codebase thanks to [RxJava](https://github.com/ReactiveX/RxJava) by Netflix and [RxAndroid](https://github.com/ReactiveX/RxJava) by RxAndroid authors, which  are  licensed under the Apache License, Version 2.0.
-- Using Optional in RxJava based on [RxJava-Optional](https://github.com/eccyan/RxJava-Optional)  by eccyan licensed under the Apache License, Version 2.0.- Code responsible of data synchronization betweene handhelded app and android wear watch is based on [RxWear](https://github.com/patloew/RxWear) library by patloew, which is licensed under the Apache License, Version 2.0.
+- Using Optional in RxJava based on [RxJava-Optional](https://github.com/eccyan/RxJava-Optional) by eccyan licensed under the Apache License, Version 2.0.- Code responsible of data synchronisation between handheld app and android wear watch is based on [RxWear](https://github.com/patloew/RxWear) library by patloew, which is licensed under the Apache License, Version 2.0.
 - Job scheduling logic and running update service in background are based on [Android-Job](https://github.com/evernote/android-job), which is licensed under the Apache License, Version 2.0. 
 
 ## Copyright
