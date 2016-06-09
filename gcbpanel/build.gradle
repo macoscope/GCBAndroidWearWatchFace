@@ -1,0 +1,45 @@
+apply plugin: 'com.android.application'
+
+android {
+    compileSdkVersion 23
+    buildToolsVersion "23.0.2"
+
+    defaultConfig {
+        applicationId "com.macoscope.gcbwatchface"
+        minSdkVersion 16
+        targetSdkVersion 23
+        versionCode 1
+        versionName "1.0"
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+    }
+}
+
+dependencies {
+    compile 'com.android.support:appcompat-v7:23.4.0'
+    compile 'com.android.support:support-v4:23.4.0'
+    compile 'com.android.support:design:23.4.0'
+    compile 'com.google.android.gms:play-services-identity:8.4.0'
+    compile 'pub.devrel:easypermissions:0.1.7'
+    compile 'io.reactivex:rxjava:1.1.5'
+    compile 'io.reactivex:rxandroid:1.2.0'
+    compile 'com.eccyan:rxjava-optional:1.1.0'
+    compile 'com.google.code.gson:gson:2.6.2'
+    compile 'com.patloew.rxwear:rxwear:1.1.0'
+    compile 'com.evernote:android-job:1.0.5'
+
+    compile('com.google.api-client:google-api-client-android:1.20.0') {
+        exclude group: 'org.apache.httpcomponents'
+    }
+    compile('com.google.apis:google-api-services-calendar:v3-rev180-1.21.0') {
+        exclude group: 'org.apache.httpcomponents'
+    }
+    testCompile 'junit:junit:4.12'
+    wearApp project(':watchface')
+    compile project(':gcbmodel')
+}
